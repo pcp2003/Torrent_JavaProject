@@ -3,51 +3,45 @@ import java.time.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.io.FileFilter;
 
-public class Node{
+public class Node {
+
     public class NewConnectionRequest {
+
         Node sender;
         LocalDateTime time;
-        NewConnectionRequest(Node s, LocalDateTime t){
+
+        NewConnectionRequest(Node s, LocalDateTime t) {
             sender = s;
             time = t;
         }
     }
-    public class FileSearcher extends Thread {
-        String toFind;
-        FileSearcher(String f){
-            toFind = f;
-        }
-        @Override
-        public void run(){
-            try{
-                for(Node node: knownedNodes){
-                    String[] files = node.getFileList();
-                    for(String file : files){
-                        if(file.equals(toFind)) break;
-                    }
-                }
 
-            }catch(InterruptedException e){
-                throw e;
-            }
-        }
+    private List<Node> knownedNodes = new ArrayList<Node>();
+
+    private String addr; 
+
+    private int port; 
+
+    public Node( String addr, int port ) {
+
+        this.addr = addr;
+        this.port = port;
     }
 
-    private List<Node> knownedNodes = new ArrayList<Node>() ;
-    Node(List<Node> nodes){
-        if(nodes.isEmpty()) throw new IllegalArgumentException("Node list is empty");
-        for(Node node: nodes) {
-            node.connect(new NewConnectionRequest(this, LocalDateTime.now()));
-            knownedNodes.add(node);
-        }
-    }
-
-    public void connect(NewConnectionRequest req){
+    public void connect(NewConnectionRequest req) {
         knownedNodes.add(req.sender);
     }
 
-    private String[] getFileList() {
-        return new File("/files").list();
+    public String[] getFileList() {
+
+        File[] files = (new File( "files")).listFiles(new FileFilter() {
+            public boolean accept(File f) {     
+                 return f.isFile() && f.getName().endsWith("mp3");
+            }
+       });
+
+       return Arrays.stream(files).map(File :: getPath).toArray(String[] :: new);
     }
 }

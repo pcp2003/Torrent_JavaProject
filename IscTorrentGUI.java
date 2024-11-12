@@ -1,5 +1,7 @@
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 public class IscTorrentGUI extends JFrame {
 
@@ -31,7 +33,21 @@ public class IscTorrentGUI extends JFrame {
         // Painel de botões
         JPanel buttonPanel = new JPanel(new GridLayout(2, 1, 5, 5));
         downloadButton = new JButton("Descarregar");
+
+        downloadButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                startDownload();
+            }
+        });
+
         connectButton = new JButton("Ligar a Nó");
+
+        connectButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                openConnectionDialog();
+            }
+        });
+
         buttonPanel.add(downloadButton);
         buttonPanel.add(connectButton);
 
@@ -41,6 +57,55 @@ public class IscTorrentGUI extends JFrame {
         add(buttonPanel, BorderLayout.EAST);
 
         setVisible(true);
+    }
+
+    private void startDownload() {
+
+        
+    }
+
+    private void openConnectionDialog() {
+
+        // Cria um novo JDialog para inserir o endereço e a porta
+        JDialog connectionDialog = new JDialog(this, "Conectar a Nó", true);
+        connectionDialog.setSize(500, 120);
+        connectionDialog.setLayout(new FlowLayout());
+
+        // Campo de texto para o endereço e para a porta
+        JLabel addressLabel = new JLabel("Endereço:");
+        JTextField addressField = new JTextField("localhost", 15);
+        JLabel portLabel = new JLabel("Porta:");
+        JTextField portField = new JTextField("8081", 5);
+        JButton okButton = new JButton("OK");
+        JButton cancelButton = new JButton("Cancelar");
+
+        okButton.addActionListener(new ActionListener() {
+
+            public void actionPerformed(ActionEvent e) {
+
+                String address = addressField.getText();
+                String port = portField.getText();
+                System.out.println("Conectando a " + address + ":" + port);
+                // Falta implementar a conexão ...
+                connectionDialog.dispose();
+            }
+        });
+
+        cancelButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                connectionDialog.dispose();
+            }
+        });
+
+
+        connectionDialog.add(addressLabel);
+        connectionDialog.add(addressField);
+        connectionDialog.add(portLabel);
+        connectionDialog.add(portField);
+        connectionDialog.add(cancelButton);
+        connectionDialog.add(okButton);
+        connectionDialog.setLocationRelativeTo(this);
+        connectionDialog.setVisible(true);
     }
 
     public static void main(String[] args) {
