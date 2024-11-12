@@ -88,10 +88,10 @@ public class IscTorrentGUI extends JFrame {
 
                 String address = addressField.getText();
                 String port = portField.getText();
+
                 try{
-                    System.out.println("asdas");
+
                     node.askToConnect(address, Integer.parseInt(port));
-                    System.out.println("Conectando a " + address + ":" + port);
 
                 }catch (InstanceNotFoundException exception){
                     System.out.println(exception.getMessage());

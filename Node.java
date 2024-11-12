@@ -12,13 +12,14 @@ public class Node {
     private String addr;
     private int port;
     private List<String> files;
+    private String folderName;
 
     public Node(String addr, int port, NetworkManager manager) {
         this.addr = addr;
         this.port = port;
         this.manager = manager;
         manager.addNode(this);
-        for (File file : new File( "files").listFiles()) {
+        for (File file : new File( "folders/" + folderName).listFiles()) {
             if (file.isFile() && file.getName().endsWith("mp3")) {
                 files.add(file.getName());
             }
@@ -47,5 +48,25 @@ public class Node {
 
     public int getPort() {
         return port;
+    }
+
+    @Override
+    public String toString() {
+        return addr + ':' + port;
+
+    }
+
+    @Override
+    public boolean equals(Object o) {
+
+        if (o instanceof Node) {
+            return addr.equals(((Node) o).getAddr()) && port == ((Node) o).getPort();
+        }
+
+        if (o instanceof NewConnectionRequest) {
+            return addr.equals(((NewConnectionRequest) o).getAddr()) && port == ((NewConnectionRequest) o).getPort();
+        }
+
+        return false;
     }
 }
