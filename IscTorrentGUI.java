@@ -10,8 +10,10 @@ public class IscTorrentGUI extends JFrame {
     private JList<String> resultsList;
     private JButton downloadButton;
     private JButton connectButton;
+    private Node node;
 
-    public IscTorrentGUI() {
+    public IscTorrentGUI(String addr, int port, NetworkManager networkManager) {
+        this.node = new Node(addr, port, networkManager);
         setTitle("IscTorrent");
         setSize(400, 300);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -109,6 +111,8 @@ public class IscTorrentGUI extends JFrame {
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(IscTorrentGUI::new);
+        NetworkManager networkManager = new NetworkManager();
+        IscTorrentGUI visualizador = new IscTorrentGUI("192.168.1.1", 8801, networkManager);
+        visualizador.setVisible(true);
     }
 }

@@ -15,7 +15,7 @@ public class FileSearcher extends Thread {
 
         for (Node node : knownedNodes) {
 
-            String[] files = node.getFileList();
+            List<String> files = node.getFiles();
 
             for (String file : files) {
                 if (file.equals(toFind))
