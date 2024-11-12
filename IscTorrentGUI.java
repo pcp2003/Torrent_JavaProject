@@ -19,8 +19,7 @@ public class IscTorrentGUI extends JFrame {
         setSize(400, 300);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
-
-        // Painel de pesquisa
+        
         JPanel searchPanel = new JPanel(new BorderLayout());
         JLabel searchLabel = new JLabel("Texto a procurar:");
         searchField = new JTextField(15);
@@ -84,9 +83,7 @@ public class IscTorrentGUI extends JFrame {
                 String port = portField.getText();
 
                 try{
-
                     node.askToConnect(address, Integer.parseInt(port));
-
                 }catch (InstanceNotFoundException exception){
                     System.out.println(exception.getMessage());
                 }
