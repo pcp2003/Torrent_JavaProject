@@ -29,11 +29,9 @@ public class IscTorrentGUI extends JFrame {
         searchPanel.add(searchField, BorderLayout.CENTER);
         searchPanel.add(searchButton, BorderLayout.EAST);
 
-        // Lista de resultados
         resultsList = new JList<>(new DefaultListModel<>());
         JScrollPane resultsScrollPane = new JScrollPane(resultsList);
 
-        // Painel de botões
         JPanel buttonPanel = new JPanel(new GridLayout(2, 1, 5, 5));
         downloadButton = new JButton("Descarregar");
 
@@ -54,7 +52,6 @@ public class IscTorrentGUI extends JFrame {
         buttonPanel.add(downloadButton);
         buttonPanel.add(connectButton);
 
-        // Adiciona os componentes à janela principal
         add(searchPanel, BorderLayout.NORTH);
         add(resultsScrollPane, BorderLayout.CENTER);
         add(buttonPanel, BorderLayout.EAST);
@@ -68,13 +65,10 @@ public class IscTorrentGUI extends JFrame {
     }
 
     private void openConnectionDialog() {
-
-        // Cria um novo JDialog para inserir o endereço e a porta
         JDialog connectionDialog = new JDialog(this, "Conectar a Nó", true);
         connectionDialog.setSize(500, 120);
         connectionDialog.setLayout(new FlowLayout());
 
-        // Campo de texto para o endereço e para a porta
         JLabel addressLabel = new JLabel("Endereço:");
         JTextField addressField = new JTextField("localhost", 15);
         JLabel portLabel = new JLabel("Porta:");
