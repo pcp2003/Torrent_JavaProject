@@ -14,10 +14,11 @@ public class Node {
     private List<String> files;
     private String folderName;
 
-    public Node(String addr, int port, NetworkManager manager) {
+    public Node(String addr, int port, NetworkManager manager, String folderName) {
         this.addr = addr;
         this.port = port;
         this.manager = manager;
+        this.folderName = folderName;
         manager.addNode(this);
         for (File file : new File( "folders/" + folderName).listFiles()) {
             if (file.isFile() && file.getName().endsWith("mp3")) {

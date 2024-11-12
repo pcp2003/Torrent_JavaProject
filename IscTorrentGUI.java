@@ -121,10 +121,9 @@ public class IscTorrentGUI extends JFrame {
     public static void main(String[] args) {
         NetworkManager networkManager = new NetworkManager();
 
-        Node a = new Node("192.168.1.1", 8081, networkManager);
-        Node b = new Node("192.168.1.2", 8081, networkManager);
-        Node c = new Node("192.168.1.3", 8081, networkManager);
-        Node d = new Node("192.168.1.4", 8081, networkManager);
+        Node a = new Node("192.168.1.1", 8081, networkManager,"A");
+        Node b = new Node("192.168.1.2", 8081, networkManager,"B");
+        Node c = new Node("192.168.1.3", 8081, networkManager, "C");
         IscTorrentGUI visualizadorA = new IscTorrentGUI(a);
         visualizadorA.setVisible(true);
         IscTorrentGUI visualizadorB = new IscTorrentGUI(b);
