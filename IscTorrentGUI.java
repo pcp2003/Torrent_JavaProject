@@ -1,3 +1,4 @@
+import javax.management.InstanceNotFoundException;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -12,9 +13,9 @@ public class IscTorrentGUI extends JFrame {
     private JButton connectButton;
     private Node node;
 
-    public IscTorrentGUI(String addr, int port, NetworkManager networkManager) {
-        this.node = new Node(addr, port, networkManager);
-        setTitle("IscTorrent");
+    public IscTorrentGUI(Node node) {
+        this.node = node;
+        setTitle("IscTorrent " +  node.getAddr() + ":" + node.getPort());
         setSize(400, 300);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
@@ -87,7 +88,14 @@ public class IscTorrentGUI extends JFrame {
 
                 String address = addressField.getText();
                 String port = portField.getText();
-                System.out.println("Conectando a " + address + ":" + port);
+                try{
+                    System.out.println("asdas");
+                    node.askToConnect(address, Integer.parseInt(port));
+                    System.out.println("Conectando a " + address + ":" + port);
+
+                }catch (InstanceNotFoundException exception){
+                    System.out.println(exception.getMessage());
+                }
                 // Falta implementar a conexão ...
                 connectionDialog.dispose();
             }
@@ -112,7 +120,17 @@ public class IscTorrentGUI extends JFrame {
 
     public static void main(String[] args) {
         NetworkManager networkManager = new NetworkManager();
-        IscTorrentGUI visualizador = new IscTorrentGUI("192.168.1.1", 8801, networkManager);
-        visualizador.setVisible(true);
+
+        Node a = new Node("192.168.1.1", 8081, networkManager);
+        Node b = new Node("192.168.1.2", 8081, networkManager);
+        Node c = new Node("192.168.1.3", 8081, networkManager);
+        Node d = new Node("192.168.1.4", 8081, networkManager);
+        IscTorrentGUI visualizadorA = new IscTorrentGUI(a);
+        visualizadorA.setVisible(true);
+        IscTorrentGUI visualizadorB = new IscTorrentGUI(b);
+        visualizadorB.setVisible(true);
+        IscTorrentGUI visualizadorC = new IscTorrentGUI(c);
+        visualizadorC.setVisible(true);
+
     }
 }
