@@ -1,50 +1,46 @@
-import javax.management.InstanceNotFoundException;
 import java.io.File;
-import java.time.*;
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.io.FileFilter;
 
 public class Node {
+
     private List<Node> knownedNodes = new ArrayList<Node>();
-    private NetworkManager manager;
-    private String addr;
     private int port;
     private List<String> files;
     private String folderName;
+    public SimpleServer server;
+    public SimpleClient client;
 
-    public Node(String addr, int port, NetworkManager manager, String folderName) {
-        this.addr = addr;
+    public Node(int port, String folderName)  {
         this.port = port;
-        this.manager = manager;
         this.folderName = folderName;
-        manager.addNode(this);
-        for (File file : new File( "folders/" + folderName).listFiles()) {
+        for (File file : new File("folders").listFiles()) {
             if (file.isFile() && file.getName().endsWith("mp3")) {
                 files.add(file.getName());
             }
         }
+        this.server = new SimpleServer(port);
+        this.client = new SimpleClient();
+
+        try {
+            server.startServing();
+        } catch (IOException e) {
+
+        }
+
     }
 
-    public void askToConnect(String addr, int port) throws InstanceNotFoundException {
-            manager.requestConnection(this, new NewConnectionRequest(addr,port));
+    public void startClient ( int port ) {
+        client.runClient(port);
     }
 
-    public void connect(Node node){
+    public void connect(Node node) {
         knownedNodes.add(node);
     }
 
     public List<String> getFiles() {
-       return files;
-    }
-
-    public void addFile(String file) {
-        files.add(file);
-    }
-
-    public String getAddr() {
-        return addr;
+        return files;
     }
 
     public int getPort() {
@@ -53,21 +49,7 @@ public class Node {
 
     @Override
     public String toString() {
-        return addr + ':' + port;
+        return "localhost" + ':' + port;
 
-    }
-
-    @Override
-    public boolean equals(Object o) {
-
-        if (o instanceof Node) {
-            return addr.equals(((Node) o).getAddr()) && port == ((Node) o).getPort();
-        }
-
-        if (o instanceof NewConnectionRequest) {
-            return addr.equals(((NewConnectionRequest) o).getAddr()) && port == ((NewConnectionRequest) o).getPort();
-        }
-
-        return false;
     }
 }
