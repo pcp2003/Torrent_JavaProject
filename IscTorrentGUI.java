@@ -83,7 +83,7 @@ public class IscTorrentGUI extends JFrame {
 
                 int port = Integer.parseInt(portField.getText());
 
-                node.startClient(port);
+                node.connectClient(port);
 
                 connectionDialog.dispose();
             }

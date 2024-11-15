@@ -29,12 +29,17 @@ public class DealWithClient extends Thread {
 
     private void serve() throws IOException {
 
-        while (true) {
-            String str = in.readLine();
-            if (str.equals("FIM"))
-                break;
-            System.out.println("Eco:" + str);
-            out.println(str);
-        }
+        System.out.println("Serving...");
+
+        // Recebe a porta do cliente para conexão reversa
+        String clientPortStr = in.readLine();
+        int clientPort = Integer.parseInt(clientPortStr.trim());
+
+        System.out.println( "Mensagem recebida: " + clientPort );
+
+        // Conecta de volta ao cliente que se conectou a este servidor
+//        serverNode.connectClient(clientPort);
+
+
     }
 }

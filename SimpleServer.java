@@ -7,9 +7,11 @@ public class SimpleServer {
 
     private int PORTO;
 
+
     public SimpleServer(int port) {
         PORTO = port;
     }
+
 
     public void startServing() throws IOException {
         ServerSocket ss = new ServerSocket(PORTO);

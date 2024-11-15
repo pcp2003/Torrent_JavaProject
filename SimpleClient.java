@@ -14,47 +14,27 @@ public class SimpleClient {
     private PrintWriter out;
     private Socket socket;
 
-    public void runClient( int port ) {
-        try {
-            connectToServer(port);
-            sendMessages();
-        } catch (IOException e) {
-            System.err.println("Error: " + e);
-        } finally {//a fechar...
-            try {
-                socket.close();
-            } catch (IOException e) {//...
-            }
-        }
-    }
-
-    void connectToServer( int PORTO) throws IOException {
-        InetAddress endereco = InetAddress.getByName(null);
+    void connectToServer( int serverPort, int clientPort) throws IOException {
+        InetAddress endereco = InetAddress.getByName( null);
         System.out.println("Endereco:" + endereco);
-        socket = new Socket(endereco, PORTO);
+        socket = new Socket(endereco, serverPort);
         System.out.println("Socket:" + socket);
         in = new BufferedReader(new InputStreamReader(
                 socket.getInputStream()));
         out = new PrintWriter(new BufferedWriter(
                 new OutputStreamWriter(socket.getOutputStream())),
                 true);
+
+        System.out.println("Conectado com sucesso ao servidor!");
+        System.out.println( "Enviando o porto: " + clientPort + " para o servidor" );
+        out.println(clientPort);
+
     }
 
-    void sendMessages() throws IOException {
-        for (int i = 0; i < 10; i++) {
-            out.println("Ola " + i);
-            String str = in.readLine();
-            System.out.println(str);
-            try {
-                Thread.sleep(3000);
-            } catch (InterruptedException e) {//...
-            }
-        }
-        out.println("FIM");
+    public void searchForMusic () {
+
     }
 
-//    public static void main(String[] args) {
-//        new SimpleClient().runClient();
-//   }
+
 
 }
