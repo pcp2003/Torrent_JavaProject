@@ -14,20 +14,25 @@ public class SimpleClient {
     private PrintWriter out;
     private Socket socket;
 
-    void connectToServer( int serverPort, int clientPort) throws IOException {
-        InetAddress endereco = InetAddress.getByName( null);
-        System.out.println("Endereco:" + endereco);
+
+    // Client Socket = CS
+
+    void connectToServer( int serverPort, NewConnectionRequest request) throws IOException {
+
+        // Alterar para ser recebi como argumento no GUI
+        InetAddress endereco = InetAddress.getByName( "localhost");
+
         socket = new Socket(endereco, serverPort);
+
         System.out.println("Socket:" + socket);
-        in = new BufferedReader(new InputStreamReader(
-                socket.getInputStream()));
-        out = new PrintWriter(new BufferedWriter(
-                new OutputStreamWriter(socket.getOutputStream())),
-                true);
+
+        DealWithClient dealWithClient = new DealWithClient(socket);
+
+        dealWithClient.start();
+
+        dealWithClient.sendConnectionRequest(request);
 
         System.out.println("Conectado com sucesso ao servidor!");
-        System.out.println( "Enviando o porto: " + clientPort + " para o servidor" );
-        out.println(clientPort);
 
     }
 

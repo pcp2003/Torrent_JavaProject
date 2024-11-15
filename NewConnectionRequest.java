@@ -1,14 +1,18 @@
-public class NewConnectionRequest {
+import java.io.Serializable;
 
-    private String addr;
+public class NewConnectionRequest implements Serializable {
+
     private int port;
 
-    NewConnectionRequest(String addr, int port) {
-        this.addr = addr;
+    public NewConnectionRequest(int port) {
         this.port = port;
     }
 
-    public String getAddr() {return addr;}
-    public int getPort() {return port;}
+    @Override
+    public String toString() {
+        return "NewConnectionRequest{" +
+                "port=" + port +
+                '}';
+    }
 
 }

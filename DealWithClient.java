@@ -3,10 +3,12 @@ import java.net.Socket;
 
 public class DealWithClient extends Thread {
 
-    private BufferedReader in;
-    private PrintWriter out;
+    private ObjectInputStream in;
+    private ObjectOutputStream out;
+    private Socket socket;
 
     public DealWithClient(Socket socket) throws IOException {
+        this.socket = socket;
         doConnections(socket);
     }
 
@@ -19,26 +21,31 @@ public class DealWithClient extends Thread {
         }
     }
 
+    public void sendConnectionRequest( NewConnectionRequest request) throws IOException {
+
+        out.writeObject(request);
+    }
+
     void doConnections(Socket socket) throws IOException {
-        in = new BufferedReader(new InputStreamReader(
-                socket.getInputStream()));
-        out = new PrintWriter(new BufferedWriter(
-                new OutputStreamWriter(socket.getOutputStream())),
-                true);
+        out = new ObjectOutputStream(socket.getOutputStream());
+        in = new ObjectInputStream(socket.getInputStream());
+
     }
 
     private void serve() throws IOException {
 
-        System.out.println("Serving...");
+        System.out.println("Serving ...");
 
-        // Recebe a porta do cliente para conexão reversa
-        String clientPortStr = in.readLine();
-        int clientPort = Integer.parseInt(clientPortStr.trim());
+        System.out.println("Socket: " + socket);
 
-        System.out.println( "Mensagem recebida: " + clientPort );
+        try {
 
-        // Conecta de volta ao cliente que se conectou a este servidor
-//        serverNode.connectClient(clientPort);
+            NewConnectionRequest request = (NewConnectionRequest) in.readObject();
+            System.out.println("Request received throught socket: " + request);
+
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
 
 
     }

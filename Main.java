@@ -6,10 +6,6 @@ public class Main {
 
         String folderName = args[1];
 
-//        int port = 8081;
-//
-//        String folderName = "dl1";
-
         Node a = new Node(port, folderName);
 
         IscTorrentGUI visualizadorA = new IscTorrentGUI(a);

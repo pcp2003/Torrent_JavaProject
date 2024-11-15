@@ -5,17 +5,19 @@ import java.util.List;
 
 public class Node {
 
-    private List<Integer> knownedNodesPorts = new ArrayList<Integer>();
+    private List<DealWithClient> dealWithClientList = new ArrayList<DealWithClient>();
     private final int PORTO;
     private List<String> files;
     private String folderName;
     public SimpleServer server;
     public SimpleClient client;
+    public NewConnectionRequest request;
 
     public Node(int PORTO, String folderName) {
         this.PORTO = PORTO;
         this.folderName = folderName;
-        for (File file : new File("folders").listFiles()) {
+        this.request = new NewConnectionRequest(PORTO);
+        for (File file : new File("folders" + File.separator + folderName).listFiles()) {
             if (file.isFile() && file.getName().endsWith("mp3")) {
                 files.add(file.getName());
             }
@@ -34,30 +36,15 @@ public class Node {
 
     }
 
-    public void connectClient(int portServer) {
 
-        if (!isConnected(portServer)) {
-            // Adiciono a porta a lista de portas para evitar iniciar a conexão novamente
-            knownedNodesPorts.add(portServer);
-            try {
-                client.connectToServer(portServer, PORTO);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+    public void connectClient(int serverPort, NewConnectionRequest request) {
 
-        } else {
-            System.out.println("Already connected!");
+        try {
+            client.connectToServer(serverPort, request);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
 
-    }
-
-    private boolean isConnected(int port) {
-        for (int p : knownedNodesPorts) {
-            if (p == port) {
-                return true;
-            }
-        }
-        return false;
     }
 
     public List<String> getFiles() {
@@ -66,6 +53,10 @@ public class Node {
 
     public int getPort() {
         return PORTO;
+    }
+
+    public NewConnectionRequest getConnectionRequest() {
+        return request;
     }
 
     @Override

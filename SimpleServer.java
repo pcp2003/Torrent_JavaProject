@@ -14,11 +14,15 @@ public class SimpleServer {
 
 
     public void startServing() throws IOException {
+
         ServerSocket ss = new ServerSocket(PORTO);
         try {
             while(true){
+
                 Socket socket = ss.accept();
                 new DealWithClient(socket).start();
+
+
             }
         } finally {
             ss.close();
