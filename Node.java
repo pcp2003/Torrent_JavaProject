@@ -1,28 +1,23 @@
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class Node {
 
-    private List<DealWithClient> dealWithClientList = new ArrayList<DealWithClient>();
-    private final int PORTO;
-    private List<String> files;
-    private String folderName;
+    private final int port;
     public SimpleServer server;
     public SimpleClient client;
     public NewConnectionRequest request;
+    private String pathToFolder;
+    private List<String> files = new ArrayList<String>();
+    private List<NodeAgent> nodeAgentList = new ArrayList<NodeAgent>();
 
-    public Node(int PORTO, String folderName) {
-        this.PORTO = PORTO;
-        this.folderName = folderName;
-        this.request = new NewConnectionRequest(PORTO);
-        for (File file : new File("folders" + File.separator + folderName).listFiles()) {
-            if (file.isFile() && file.getName().endsWith("mp3")) {
-                files.add(file.getName());
-            }
-        }
-        this.server = new SimpleServer(PORTO);
+    public Node(int port, String folderName) {
+        this.port = port;
+        this.pathToFolder = ("folders" + File.separator + folderName);
+        this.request = new NewConnectionRequest(port);
+        updateFilesList();
+        this.server = new SimpleServer(port);
         this.client = new SimpleClient();
 
         // Iniciar o servidor em uma thread separada
@@ -36,7 +31,6 @@ public class Node {
 
     }
 
-
     public void connectClient(int serverPort, NewConnectionRequest request) {
 
         try {
@@ -47,12 +41,21 @@ public class Node {
 
     }
 
+    public void updateFilesList () {
+
+        for (File file : new File(pathToFolder).listFiles()) {
+            if (file.isFile() && file.getName().endsWith("mp3")) {
+                files.add(file.getName());
+            }
+        }
+    }
+
     public List<String> getFiles() {
         return files;
     }
 
     public int getPort() {
-        return PORTO;
+        return port;
     }
 
     public NewConnectionRequest getConnectionRequest() {
@@ -61,7 +64,7 @@ public class Node {
 
     @Override
     public String toString() {
-        return "localhost" + ':' + PORTO;
+        return "localhost" + ':' + port;
 
     }
 }

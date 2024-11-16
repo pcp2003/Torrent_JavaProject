@@ -1,13 +1,13 @@
 import java.io.*;
 import java.net.Socket;
 
-public class DealWithClient extends Thread {
+public class NodeAgent extends Thread {
 
     private ObjectInputStream in;
     private ObjectOutputStream out;
     private Socket socket;
 
-    public DealWithClient(Socket socket) throws IOException {
+    public NodeAgent(Socket socket) throws IOException {
         this.socket = socket;
         doConnections(socket);
     }

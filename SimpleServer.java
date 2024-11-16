@@ -5,32 +5,26 @@ import java.net.Socket;
 
 public class SimpleServer {
 
-    private int PORTO;
-
+    private int port;
 
     public SimpleServer(int port) {
-        PORTO = port;
+        this.port = port;
     }
-
 
     public void startServing() throws IOException {
 
-        ServerSocket ss = new ServerSocket(PORTO);
+        ServerSocket ss = new ServerSocket(port);
         try {
-            while(true){
+            while (true) {
 
-                Socket socket = ss.accept();
-                new DealWithClient(socket).start();
+                Socket normalSocket = ss.accept();
+                new NodeAgent(normalSocket).start();
 
 
             }
         } finally {
             ss.close();
         }
-    }
-
-    public int getPort(){
-        return PORTO;
     }
 
 }
