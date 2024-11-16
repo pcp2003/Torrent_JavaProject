@@ -1,7 +1,6 @@
 import java.io.Serializable;
 
 public class NewConnectionRequest implements Serializable {
-
     private int port;
 
     public NewConnectionRequest(int port) {

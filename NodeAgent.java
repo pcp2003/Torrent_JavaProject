@@ -2,12 +2,13 @@ import java.io.*;
 import java.net.Socket;
 
 public class NodeAgent extends Thread {
-
+    private int agentId;
     private ObjectInputStream in;
     private ObjectOutputStream out;
     private Socket socket;
 
-    public NodeAgent(Socket socket) throws IOException {
+    public NodeAgent(int agentId, Socket socket) throws IOException {
+        this.agentId = agentId;
         this.socket = socket;
         doConnections(socket);
     }
@@ -36,17 +37,26 @@ public class NodeAgent extends Thread {
 
         System.out.println("Serving ...");
 
-        System.out.println("Socket: " + socket);
+//        System.out.println("Socket: " + socket);
+        System.out.println(this);
 
         try {
 
             NewConnectionRequest request = (NewConnectionRequest) in.readObject();
-            System.out.println("Request received throught socket: " + request);
+            System.out.println("Request received from client: " + request);
 
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
 
-
     }
+
+    @Override
+    public String toString() {
+        return "NodeAgent{" +
+                "agentId=" + agentId +
+                ", socket=" + socket +
+                '}';
+    }
+
 }

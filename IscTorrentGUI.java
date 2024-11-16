@@ -2,6 +2,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 
 public class IscTorrentGUI extends JFrame {
 
@@ -78,12 +79,10 @@ public class IscTorrentGUI extends JFrame {
 
             public void actionPerformed(ActionEvent e) {
 
-                // O endereço não importa por causa do InetAdress,
-                // mas posteriormente vale a pena implementar a parte do adress para impedir o erro
-
+                String addr = addressField.getText();
                 int port = Integer.parseInt(portField.getText());
 
-                node.connectClient( port, node.getConnectionRequest());
+                node.connectToServer( addr, port, node.getConnectionRequest());
 
                 connectionDialog.dispose();
             }

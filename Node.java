@@ -1,44 +1,67 @@
 import java.io.File;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.*;
 
 public class Node {
 
     private final int port;
-    public SimpleServer server;
-    public SimpleClient client;
     public NewConnectionRequest request;
     private String pathToFolder;
-    private List<String> files = new ArrayList<String>();
-    private List<NodeAgent> nodeAgentList = new ArrayList<NodeAgent>();
+    private final List<String> files;
+    private final List<NodeAgent> nodeAgentList;
 
     public Node(int port, String folderName) {
+
         this.port = port;
         this.pathToFolder = ("folders" + File.separator + folderName);
         this.request = new NewConnectionRequest(port);
+        this.files = new ArrayList<>();
+        this.nodeAgentList = new ArrayList<>();
         updateFilesList();
-        this.server = new SimpleServer(port);
-        this.client = new SimpleClient();
+        startServing();
+    }
 
-        // Iniciar o servidor em uma thread separada
-        new Thread(() -> {
+    void connectToServer(String addr, int serverPort, NewConnectionRequest request) {
+
+        if ( !(serverPort == port) ) {
             try {
-                server.startServing();
+
+                InetAddress endereco = InetAddress.getByName(addr);
+                Socket clientSocket = new Socket(endereco, serverPort);
+                NodeAgent nodeAgent = new NodeAgent(port, clientSocket);
+                nodeAgent.start();
+                nodeAgent.sendConnectionRequest(request);
+
             } catch (IOException e) {
+                System.err.println("Erro ao conectar ao servidor: " + e.getMessage());
                 e.printStackTrace();
             }
-        }).start();
+        }else {
+            System.out.println("Não é possivel conectar-se ao seu próprio server!");
+        }
 
     }
 
-    public void connectClient(int serverPort, NewConnectionRequest request) {
-
-        try {
-            client.connectToServer(serverPort, request);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
+    public void startServing() {
+        new Thread(() -> {
+            try (ServerSocket ss = new ServerSocket(port)) {
+                while (true) {
+                    try {
+                        Socket normalSocket = ss.accept();
+                        new NodeAgent(port, normalSocket).start();
+                    } catch (IOException e) {
+                        System.err.println("Erro ao aceitar conexão: " + e.getMessage());
+                        e.printStackTrace();
+                    }
+                }
+            } catch (IOException e) {
+                System.err.println("Erro ao criar ServerSocket: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }).start();
     }
 
     public void updateFilesList () {
@@ -62,9 +85,4 @@ public class Node {
         return request;
     }
 
-    @Override
-    public String toString() {
-        return "localhost" + ':' + port;
-
-    }
 }
