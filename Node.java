@@ -24,14 +24,15 @@ public class Node {
         startServing();
     }
 
-    void connectToServer(String addr, int serverPort, NewConnectionRequest request) {
+    // Função para um cliente se conectar a um servidor de um nó que não seja servidor de si próprio.
+    void connectClient(String addr, int serverPort, NewConnectionRequest request) {
 
         if ( !(serverPort == port) ) {
             try {
 
                 InetAddress endereco = InetAddress.getByName(addr);
                 Socket clientSocket = new Socket(endereco, serverPort);
-                NodeAgent nodeAgent = new NodeAgent(port, clientSocket);
+                NodeAgent nodeAgent = new NodeAgent(port, clientSocket); // Cria o agent reponsavel pelo socket do cliente
                 nodeAgent.start();
                 nodeAgent.sendConnectionRequest(request);
 
@@ -45,13 +46,17 @@ public class Node {
 
     }
 
+    // Função para incializar um servidor de um nó.
     public void startServing() {
+
+        // Precisa ser incializado em uma thread separada porque .accept() fica a espera.
+
         new Thread(() -> {
             try (ServerSocket ss = new ServerSocket(port)) {
                 while (true) {
                     try {
                         Socket normalSocket = ss.accept();
-                        new NodeAgent(port, normalSocket).start();
+                        new NodeAgent(port, normalSocket).start(); // Cria o agent responsavel pelo socket do servidor
                     } catch (IOException e) {
                         System.err.println("Erro ao aceitar conexão: " + e.getMessage());
                         e.printStackTrace();
@@ -63,7 +68,8 @@ public class Node {
             }
         }).start();
     }
-
+    // Função para criar/atualizar a lista de filmes.
+    // Deve ser usando antes de realizar uma procura para garantir que filmes filme que possam ser adicionados enquanto o programa acontece estejam incluidos.
     public void updateFilesList () {
 
         for (File file : new File(pathToFolder).listFiles()) {

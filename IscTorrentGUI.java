@@ -34,6 +34,15 @@ public class IscTorrentGUI extends JFrame {
         JPanel buttonPanel = new JPanel(new GridLayout(2, 1, 5, 5));
         downloadButton = new JButton("Descarregar");
 
+        searchButton.addActionListener(new ActionListener() {
+
+            public void actionPerformed(ActionEvent e) {
+
+
+
+            }
+        });
+
         downloadButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 startDownload();
@@ -63,6 +72,8 @@ public class IscTorrentGUI extends JFrame {
         
     }
 
+
+
     private void openConnectionDialog() {
         JDialog connectionDialog = new JDialog(this, "Conectar a Nó", true);
         connectionDialog.setSize(500, 120);
@@ -82,7 +93,7 @@ public class IscTorrentGUI extends JFrame {
                 String addr = addressField.getText();
                 int port = Integer.parseInt(portField.getText());
 
-                node.connectToServer( addr, port, node.getConnectionRequest());
+                node.connectClient( addr, port, node.getConnectionRequest());
 
                 connectionDialog.dispose();
             }

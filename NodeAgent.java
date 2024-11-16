@@ -2,10 +2,10 @@ import java.io.*;
 import java.net.Socket;
 
 public class NodeAgent extends Thread {
-    private int agentId;
+    private int agentId;  // Esse ID corresponde ao porto do Node que o criou.
     private ObjectInputStream in;
     private ObjectOutputStream out;
-    private Socket socket;
+    private Socket socket; // socket gerido por cada agent
 
     public NodeAgent(int agentId, Socket socket) throws IOException {
         this.agentId = agentId;
@@ -22,22 +22,24 @@ public class NodeAgent extends Thread {
         }
     }
 
+    // Envia pedidos de cone
     public void sendConnectionRequest( NewConnectionRequest request) throws IOException {
 
         out.writeObject(request);
     }
 
+    // Realiza as conexões dos canais dos sockets
     void doConnections(Socket socket) throws IOException {
         out = new ObjectOutputStream(socket.getOutputStream());
         in = new ObjectInputStream(socket.getInputStream());
 
     }
 
+    // Funções realizadas pelo servidor
     private void serve() throws IOException {
 
         System.out.println("Serving ...");
 
-//        System.out.println("Socket: " + socket);
         System.out.println(this);
 
         try {
@@ -55,7 +57,7 @@ public class NodeAgent extends Thread {
     public String toString() {
         return "NodeAgent{" +
                 "agentId=" + agentId +
-                ", socket=" + socket +
+                "," + socket +
                 '}';
     }
 
