@@ -35,6 +35,7 @@ public class Node {
                 NodeAgent nodeAgent = new NodeAgent(this, clientSocket); // Cria o agent reponsavel pelo socket do cliente
                 nodeAgent.start();
                 nodeAgent.sendConnectionRequest(request);
+                nodeAgentList.add(nodeAgent);
 
             } catch (IOException e) {
                 System.err.println("Erro ao conectar ao servidor: " + e.getMessage());
@@ -56,7 +57,10 @@ public class Node {
                 while (true) {
                     try {
                         Socket normalSocket = ss.accept();
-                        new NodeAgent(this, normalSocket).start(); // Cria o agent responsavel pelo socket do servidor
+                        NodeAgent nodeAgent = new NodeAgent(this, normalSocket); // Cria o agent responsavel pelo socket do servidor
+                        nodeAgent.start();
+                        nodeAgentList.add(nodeAgent);
+
                     } catch (IOException e) {
                         System.err.println("Erro ao aceitar conexão: " + e.getMessage());
                         e.printStackTrace();
@@ -68,6 +72,25 @@ public class Node {
             }
         }).start();
     }
+
+    // Função para buscar as music que possuam no nome a palavra introduzida no "Procurar"
+    public List<String> searchMusic(String wordToSearch) {
+        System.out.println("Iniciando busca por: " + wordToSearch);
+
+        for (NodeAgent nodeAgent : nodeAgentList) {
+            System.out.println("Enviando solicitação para agente: " + nodeAgent);
+            nodeAgent.requestFilesList();
+        }
+
+        // Simulação de resultados
+        List<String> test = new ArrayList<>();
+        test.add(wordToSearch);
+        test.add("Resultado 1");
+        test.add("Resultado 2");
+
+        return test;
+    }
+
     // Função para criar/atualizar a lista de filmes.
     // Deve ser usando antes de realizar uma procura para garantir que filmes filme que possam ser adicionados enquanto o programa acontece estejam incluidos.
     public void updateFilesList () {

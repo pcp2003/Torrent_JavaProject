@@ -40,18 +40,14 @@ public class IscTorrentGUI extends JFrame {
 
             public void actionPerformed(ActionEvent e) {
 
-                String searchWord = searchField.getText();
+                String wordToSearch = searchField.getText();
 
-                // Simulação de resultados
-                List<String> test = new ArrayList<>();
-                test.add(searchWord);
-                test.add("Resultado 1");
-                test.add("Resultado 2");
+                List<String> musics = node.searchMusic(wordToSearch);
 
                 // Atualizando o modelo da lista
                 DefaultListModel<String> model = new DefaultListModel<>();
-                for (String item : test) {
-                    model.addElement(item);
+                for (String music : musics) {
+                    model.addElement(music);
                 }
                 resultsList.setModel(model); // Definindo o novo modelo no JList
 

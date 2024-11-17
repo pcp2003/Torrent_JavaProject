@@ -8,7 +8,7 @@ public class NodeAgent extends Thread {
     private ObjectOutputStream out;
     private Socket socket;
 
-    public NodeAgent(Node node, Socket socket)  {
+    public NodeAgent(Node node, Socket socket) {
         this.node = node;
         this.socket = socket;
         doConnections();
@@ -22,7 +22,7 @@ public class NodeAgent extends Thread {
     }
 
     // Envia pedidos de cone
-    public void sendConnectionRequest( NewConnectionRequest request) {
+    public void sendConnectionRequest(NewConnectionRequest request) {
 
         try {
             out.writeObject(request);
@@ -31,7 +31,7 @@ public class NodeAgent extends Thread {
         }
     }
 
-    public void sendFilesList (List<String> files ){
+    public void sendFilesList(List<String> files) {
 
         String[] filesList = files.toArray(new String[0]);
 
@@ -39,6 +39,15 @@ public class NodeAgent extends Thread {
             out.writeObject(filesList);
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public void requestFilesList(){
+        try {
+            System.out.println("Enviando REQUEST_FILES_LIST para o servidor: " + socket);
+            out.writeObject("REQUEST_FILES_LIST");
+        } catch (IOException e) {
+            System.err.println("Erro ao enviar REQUEST_FILES_LIST: " + e.getMessage());
         }
     }
 
@@ -58,37 +67,38 @@ public class NodeAgent extends Thread {
 
     // Funções realizadas pelo servidor
     private void serve() {
-
-        System.out.println(this);
-
+        System.out.println("Agente iniciado e ouvindo no socket: " + socket);
         try {
+            while (true) {
+                Object obj = in.readObject();
+                System.out.println("Objeto recebido: " + obj);
+                switch (obj) {
+                    case String requestType when requestType.equals("REQUEST_FILES_LIST") -> {
+                        System.out.println("Solicitação de lista de arquivos recebida.");
+                        node.updateFilesList();
+                        sendFilesList(node.getFiles());
+                    }
 
-            Object obj = in.readObject();
+                    case String [] filesList -> {
 
-            switch (obj) {
-
-                case String [] files -> {
-
+                    }
+                    case NewConnectionRequest request -> {
+                        System.out.println("Request received from client: " + request);
+                    }
+                    default -> System.out.println("Tipo desconhecido: " + obj);
                 }
-                case NewConnectionRequest request -> {
-                    System.out.println("Request received from client: " + request);
-                }
-                default -> System.out.println("Tipo desconhecido.");
             }
-
-
         } catch (ClassNotFoundException | IOException e) {
-            throw new RuntimeException(e);
+            System.err.println("Conexão encerrada ou erro: " + e.getMessage());
+            e.printStackTrace();
         }
-
     }
+
+
 
     @Override
     public String toString() {
-        return "NodeAgent{" +
-                "node=" + node +
-                ", socket=" + socket +
-                '}';
+        return "NodeAgent{" + "node=" + node + ", socket=" + socket + '}';
     }
 
 
