@@ -1,53 +1,83 @@
 import java.io.*;
 import java.net.Socket;
+import java.util.List;
 
 public class NodeAgent extends Thread {
-    private int agentId;  // Esse ID corresponde ao porto do Node que o criou.
+    private Node node;
     private ObjectInputStream in;
     private ObjectOutputStream out;
-    private Socket socket; // socket gerido por cada agent
+    private Socket socket;
 
-    public NodeAgent(int agentId, Socket socket) throws IOException {
-        this.agentId = agentId;
+    public NodeAgent(Node node, Socket socket)  {
+        this.node = node;
         this.socket = socket;
-        doConnections(socket);
+        doConnections();
     }
 
     @Override
     public void run() {
-        try {
-            serve();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+
+        serve();
+
     }
 
     // Envia pedidos de cone
-    public void sendConnectionRequest( NewConnectionRequest request) throws IOException {
+    public void sendConnectionRequest( NewConnectionRequest request) {
 
-        out.writeObject(request);
+        try {
+            out.writeObject(request);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
+    public void sendFilesList (List<String> files ){
+
+        String[] filesList = files.toArray(new String[0]);
+
+        try {
+            out.writeObject(filesList);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
     // Realiza as conexões dos canais dos sockets
-    void doConnections(Socket socket) throws IOException {
-        out = new ObjectOutputStream(socket.getOutputStream());
-        in = new ObjectInputStream(socket.getInputStream());
+    void doConnections() {
+
+        try {
+            out = new ObjectOutputStream(socket.getOutputStream());
+            in = new ObjectInputStream(socket.getInputStream());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
 
     }
 
     // Funções realizadas pelo servidor
-    private void serve() throws IOException {
-
-        System.out.println("Serving ...");
+    private void serve() {
 
         System.out.println(this);
 
         try {
 
-            NewConnectionRequest request = (NewConnectionRequest) in.readObject();
-            System.out.println("Request received from client: " + request);
+            Object obj = in.readObject();
 
-        } catch (ClassNotFoundException e) {
+            switch (obj) {
+
+                case String [] files -> {
+
+                }
+                case NewConnectionRequest request -> {
+                    System.out.println("Request received from client: " + request);
+                }
+                default -> System.out.println("Tipo desconhecido.");
+            }
+
+
+        } catch (ClassNotFoundException | IOException e) {
             throw new RuntimeException(e);
         }
 
@@ -56,9 +86,10 @@ public class NodeAgent extends Thread {
     @Override
     public String toString() {
         return "NodeAgent{" +
-                "agentId=" + agentId +
-                "," + socket +
+                "node=" + node +
+                ", socket=" + socket +
                 '}';
     }
+
 
 }

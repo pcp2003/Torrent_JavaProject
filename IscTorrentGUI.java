@@ -3,6 +3,8 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class IscTorrentGUI extends JFrame {
 
@@ -38,6 +40,20 @@ public class IscTorrentGUI extends JFrame {
 
             public void actionPerformed(ActionEvent e) {
 
+                String searchWord = searchField.getText();
+
+                // Simulação de resultados
+                List<String> test = new ArrayList<>();
+                test.add(searchWord);
+                test.add("Resultado 1");
+                test.add("Resultado 2");
+
+                // Atualizando o modelo da lista
+                DefaultListModel<String> model = new DefaultListModel<>();
+                for (String item : test) {
+                    model.addElement(item);
+                }
+                resultsList.setModel(model); // Definindo o novo modelo no JList
 
 
             }

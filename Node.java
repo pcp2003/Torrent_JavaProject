@@ -32,7 +32,7 @@ public class Node {
 
                 InetAddress endereco = InetAddress.getByName(addr);
                 Socket clientSocket = new Socket(endereco, serverPort);
-                NodeAgent nodeAgent = new NodeAgent(port, clientSocket); // Cria o agent reponsavel pelo socket do cliente
+                NodeAgent nodeAgent = new NodeAgent(this, clientSocket); // Cria o agent reponsavel pelo socket do cliente
                 nodeAgent.start();
                 nodeAgent.sendConnectionRequest(request);
 
@@ -56,7 +56,7 @@ public class Node {
                 while (true) {
                     try {
                         Socket normalSocket = ss.accept();
-                        new NodeAgent(port, normalSocket).start(); // Cria o agent responsavel pelo socket do servidor
+                        new NodeAgent(this, normalSocket).start(); // Cria o agent responsavel pelo socket do servidor
                     } catch (IOException e) {
                         System.err.println("Erro ao aceitar conexão: " + e.getMessage());
                         e.printStackTrace();
@@ -77,6 +77,13 @@ public class Node {
                 files.add(file.getName());
             }
         }
+    }
+
+    @Override
+    public String toString() {
+        return "Node{" +
+                "port=" + port +
+                '}';
     }
 
     public List<String> getFiles() {
