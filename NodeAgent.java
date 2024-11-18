@@ -1,5 +1,6 @@
 import java.io.*;
 import java.net.Socket;
+import java.util.Arrays;
 import java.util.List;
 
 public class NodeAgent extends Thread {
@@ -42,10 +43,14 @@ public class NodeAgent extends Thread {
         }
     }
 
+    // Faz o pedido da lista dos ficheiros para os nós ligados
+    // Para garantir o funcionamento na função searchMusic temos que garantir que esta função só acabe quando a lista receivedList for alterada.
     public void requestFilesList(){
         try {
+            int beforeRequest = node.getReceivedFilesList().size();
             System.out.println("Enviando REQUEST_FILES_LIST para o servidor: " + socket);
             out.writeObject("REQUEST_FILES_LIST");
+
         } catch (IOException e) {
             System.err.println("Erro ao enviar REQUEST_FILES_LIST: " + e.getMessage());
         }
@@ -71,7 +76,6 @@ public class NodeAgent extends Thread {
         try {
             while (true) {
                 Object obj = in.readObject();
-                System.out.println("Objeto recebido: " + obj);
                 switch (obj) {
                     case String requestType when requestType.equals("REQUEST_FILES_LIST") -> {
                         System.out.println("Solicitação de lista de arquivos recebida.");
@@ -80,6 +84,8 @@ public class NodeAgent extends Thread {
                     }
 
                     case String [] filesList -> {
+
+                        node.appendFilesToReceivedFiles(filesList);
 
                     }
                     case NewConnectionRequest request -> {
