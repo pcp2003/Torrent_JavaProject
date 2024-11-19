@@ -51,6 +51,7 @@ public class NodeAgent extends Thread {
             System.out.println("Enviando REQUEST_FILES_LIST para o servidor: " + socket);
             out.writeObject("REQUEST_FILES_LIST");
 
+
         } catch (IOException e) {
             System.err.println("Erro ao enviar REQUEST_FILES_LIST: " + e.getMessage());
         }
@@ -86,6 +87,7 @@ public class NodeAgent extends Thread {
                     case String [] filesList -> {
 
                         node.appendFilesToReceivedFiles(filesList);
+                        node.decreaseWaitNodes();
 
                     }
                     case NewConnectionRequest request -> {

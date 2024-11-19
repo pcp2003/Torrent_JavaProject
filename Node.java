@@ -16,6 +16,7 @@ public class Node {
     private final List<String> receivedFiles = new ArrayList<>();
     private final ReentrantLock lock = new ReentrantLock();
 
+    public volatile int waitNodesLists = 0;
 
     public Node(int port, String folderName) {
 
@@ -100,18 +101,17 @@ public class Node {
 
         System.err.println("Lista de Agentes: " + nodeAgentList);
 
+        waitNodesLists = nodeAgentList.size();
+
+        System.out.println("waitNodeLists=" + waitNodesLists);
+
         // Solicitar listas de arquivos de todos os nós conectados
         for (NodeAgent nodeAgent : nodeAgentList) {
             nodeAgent.requestFilesList();
         }
 
-        // Espera um tempo para garantir que os arquivos foram recebidos
-        try {
-            // Ajuste o tempo conforme necessário, dependendo de como os arquivos são recebidos
-            Thread.sleep(500); // 1 segundo de espera
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt(); // Lidar com a interrupção
-        }
+        // Espera a lista receivedFiles ser alterada por todos os nós conectados
+        while (waitNodesLists > 0);
 
         // Criar um mapa com as contagens de arquivos recebidos
         Map<String, Integer> fileCounts = countFileOccurrences(receivedFiles);
@@ -163,6 +163,12 @@ public class Node {
         } finally {
             lock.unlock();
         }
+    }
+
+    public synchronized void decreaseWaitNodes () {
+        waitNodesLists--;
+        System.out.println("Decreasing ... waitNodeLists=" + waitNodesLists);
+        notify();
     }
 
 
