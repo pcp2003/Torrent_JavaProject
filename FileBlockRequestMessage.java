@@ -1,3 +1,5 @@
+import java.util.Arrays;
+
 public class FileBlockRequestMessage {
 
     private String fileHash;
@@ -9,6 +11,19 @@ public class FileBlockRequestMessage {
         this.fileHash = fileHash;
         this.offset = offset;
         this.length = length;
+    }
+
+    public long getLength() {
+        return length;
+    }
+
+    @Override
+    public String toString() {
+        return "FileBlockRequestMessage{" +
+                "fileHash=" + fileHash +
+                ", offset=" + offset +
+                ", length=" + length +
+                '}';
     }
 
 }
