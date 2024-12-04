@@ -2,8 +2,11 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.*;
 import java.util.List;
 
 public class IscTorrentGUI extends JFrame {
@@ -14,9 +17,10 @@ public class IscTorrentGUI extends JFrame {
     private JButton downloadButton;
     private JButton connectButton;
     private Node node;
+    private Map<Integer, List<FileSearchResult>> searchHashMap = new HashMap<>();
 
-    public IscTorrentGUI(Node node) {
-        this.node = node;
+    public IscTorrentGUI(int id) throws UnknownHostException {
+        this.node = new Node(this, InetAddress.getLocalHost(), 8080 + id, "dl" + id);
         setTitle("IscTorrent " +  "localhost" + ":" + node.getPort());
         setSize(400, 300);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -42,21 +46,19 @@ public class IscTorrentGUI extends JFrame {
 
                 String wordToSearch = searchField.getText();
 
-                List<String> musics = node.searchMusic(wordToSearch);
-
-                // Atualizando o modelo da lista
-                DefaultListModel<String> model = new DefaultListModel<>();
-                for (String music : musics) {
-                    model.addElement(music);
-                }
-                resultsList.setModel(model); // Definindo o novo modelo no JList
-
+                node.searchMusic(wordToSearch);
 
             }
         });
 
         downloadButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
+                Integer selectedHash = searchHashMap.keySet().stream().toList().get(resultsList.getSelectedIndex());
+                String message = "A fazer download de " + searchHashMap.get(selectedHash).getFirst().getFileName() + " através de " +  searchHashMap.get(selectedHash).size() + " nós";
+                for(FileSearchResult fileSearchResult : searchHashMap.get(selectedHash)){
+                    message+=" [" + fileSearchResult.getAddress() + "/" + fileSearchResult.getPort() + "] ";
+                }
+                System.out.println(message);
                 startDownload();
             }
         });
@@ -128,4 +130,23 @@ public class IscTorrentGUI extends JFrame {
         connectionDialog.setVisible(true);
     }
 
+    public void updateMusicResultList(List<FileSearchResult> musicSearchResult) {
+        // Atualizando o modelo da lista
+        DefaultListModel<String> model = new DefaultListModel<>();
+        searchHashMap = FileSearchResult.hashMap(musicSearchResult);
+        Set<Integer> hashes = searchHashMap.keySet();
+        System.out.println(hashes);
+        for (Integer hash : hashes) {
+            model.addElement(searchHashMap.get(hash).getFirst().getFileName() + " [" + hash + "] " + "(" + searchHashMap.get(hash).size() + ")");
+        }
+        resultsList.setModel(model); // Definindo o novo modelo no JList
+
+//        DefaultListModel<String> model = new DefaultListModel<>();
+//        Map<Integer, List<FileSearchResult>> results = FileSearchResult.hashMap(musicSearchResult);
+//        List<Integer> hashes = results.keySet().stream().toList();
+//        for (Integer hash : hashes) {
+//            model.addElement(results.get(hash).getFirst().getFileName() + "(" + hash + ")" + "(" + results.get(hash).size() + ")");
+//        }
+//        resultsList.setModel(model); // Definindo o novo modelo no JList
+    }
 }

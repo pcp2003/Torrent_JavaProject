@@ -2,11 +2,11 @@ import java.util.Arrays;
 
 public class FileBlockRequestMessage {
 
-    private String fileHash;
+    private int fileHash;
     private long offset;
     private long length;
 
-    FileBlockRequestMessage(String fileHash, long offset, long length) {
+    FileBlockRequestMessage(int fileHash, long offset, long length) {
 
         this.fileHash = fileHash;
         this.offset = offset;

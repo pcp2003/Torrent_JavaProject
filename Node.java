@@ -4,28 +4,25 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.*;
-import java.util.concurrent.locks.ReentrantLock;
 
 public class Node {
 
+    private final InetAddress address;
     private final int port;
     public NewConnectionRequest request;
     private String pathToFolder;
-    private final List<String> files;
     private final List<NodeAgent> nodeAgentList;
-    private final List<String> receivedFiles = new ArrayList<>();
-    private final ReentrantLock lock = new ReentrantLock();
-
+    private List<FileSearchResult> musicSearchResult = new ArrayList<>();
     public volatile int waitNodesLists = 0;
+    private IscTorrentGUI gui;
 
-    public Node(int port, String folderName) {
-
+    public Node(IscTorrentGUI gui, InetAddress address, int port, String folderName) {
+        this.gui = gui;
+        this.address = address;
         this.port = port;
         this.pathToFolder = ("folders" + File.separator + folderName);
         this.request = new NewConnectionRequest(port);
-        this.files = new ArrayList<>();
         this.nodeAgentList = new ArrayList<>();
-        updateFilesList();
         startServing();
     }
 
@@ -95,97 +92,60 @@ public class Node {
     }
 
     // Função para buscar as music que possuam no nome a palavra introduzida no "Procurar"
-    public List<String> searchMusic(String wordToSearch) {
-
-        clearReceivedFiles();
-
-        System.err.println("Lista de Agentes: " + nodeAgentList);
-
-        waitNodesLists = nodeAgentList.size();
-
-        System.out.println("waitNodeLists=" + waitNodesLists);
-
+    public void searchMusic(String wordToSearch) {
+        musicSearchResult.clear();
         // Solicitar listas de arquivos de todos os nós conectados
         for (NodeAgent nodeAgent : nodeAgentList) {
-            nodeAgent.requestFilesList();
-        }
-
-        // Espera a lista receivedFiles ser alterada por todos os nós conectados
-        while (waitNodesLists > 0);
-
-        // Criar um mapa com as contagens de arquivos recebidos
-        Map<String, Integer> fileCounts = countFileOccurrences(receivedFiles);
-
-        List<String> matchingFiles = new ArrayList<>();
-
-        for (String file : fileCounts.keySet()) {
-            if (file.toLowerCase().contains(wordToSearch.toLowerCase())) {
-                // Adicionar arquivo no formato desejado
-                matchingFiles.add(file + " <" + fileCounts.get(file) + ">");
-            }
-        }
-
-        System.out.println(matchingFiles);
-
-        return matchingFiles;
-    }
-
-    // To append filesReceived
-    public void appendFilesToReceivedFiles(String[] filesList) {
-        lock.lock();  // Bloqueia a operação enquanto modifica a lista
-        try {
-            receivedFiles.addAll(Arrays.asList(filesList));  // Modifica a lista de forma segura
-        } finally {
-            lock.unlock();  // Desbloqueia para permitir o acesso de outros threads
+            nodeAgent.searchMusicByWord(new WordSearchMessage(wordToSearch));
         }
     }
+
+    public synchronized void receiveMusicSearchResult(List<FileSearchResult> fileSearchResult) {
+        musicSearchResult.addAll(fileSearchResult);
+        gui.updateMusicResultList(musicSearchResult);
+        notifyAll();
+    }
+
+//    // To append filesReceived
+//    public void appendFilesToReceivedFiles(String[] filesList) {
+//        lock.lock();  // Bloqueia a operação enquanto modifica a lista
+//        try {
+//            receivedFiles.addAll(Arrays.asList(filesList));  // Modifica a lista de forma segura
+//        } finally {
+//            lock.unlock();  // Desbloqueia para permitir o acesso de outros threads
+//        }
+//    }
 
 
 
     // Função para criar/atualizar a lista de filmes.
     // Deve ser usando antes de realizar uma procura para garantir que filmes filme que possam ser adicionados enquanto o programa acontece estejam incluidos.
-    public void updateFilesList () {
-
-        files.clear();
-
-        for (File file : new File(pathToFolder).listFiles()) {
+    public List<File> getFilesList () {
+        List<File> files = new ArrayList<>();
+        for (File file : Objects.requireNonNull(new File(pathToFolder).listFiles())) {
             if (file.isFile() && file.getName().endsWith("mp3")) {
-                files.add(file.getName());
+                files.add(file);
             }
         }
+        return files;
     }
 
-    // Lista de files recebidos através da utilização de "Procurar"
-    public List<String> getReceivedFilesList() {
-        lock.lock();
-        try {
-            return new ArrayList<>(receivedFiles);  // Retorna uma cópia da lista para evitar problemas de concorrência
-        } finally {
-            lock.unlock();
-        }
-    }
+//    // Lista de files recebidos através da utilização de "Procurar"
+//    public List<String> getReceivedFilesList() {
+//        lock.lock();
+//        try {
+//            return new ArrayList<>(receivedFiles);  // Retorna uma cópia da lista para evitar problemas de concorrência
+//        } finally {
+//            lock.unlock();
+//        }
+//    }
 
-    public synchronized void decreaseWaitNodes () {
-        waitNodesLists--;
-        System.out.println("Decreasing ... waitNodeLists=" + waitNodesLists);
-        notify();
-    }
-
-
-    // Função para limpar a lista.
-    public void clearReceivedFiles() {
-        receivedFiles.clear();
-    }
 
     @Override
     public String toString() {
         return "Node{" +
                 "port=" + port +
                 '}';
-    }
-
-    public List<String> getFiles() {
-        return files;
     }
 
     public int getPort() {
@@ -196,4 +156,15 @@ public class Node {
         return request;
     }
 
+    public List<FileSearchResult> getMusicByWord(WordSearchMessage wordSearchMessage) {
+        String word = wordSearchMessage.getWord();
+        List<File> files = getFilesList();
+        List<FileSearchResult> results = new ArrayList<>();
+        for (File file : files) {
+            if(file.getName().toLowerCase().contains(word.toLowerCase())){
+                results.add(new FileSearchResult(wordSearchMessage, file, address, port));
+            }
+        }
+        return results;
+    }
 }

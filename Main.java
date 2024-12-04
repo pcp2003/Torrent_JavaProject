@@ -1,14 +1,10 @@
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+
 public class Main {
 
-    public static void main(String[] args) {
-
-        int port = Integer.parseInt(args[0]);
-
-        String folderName = args[1];
-
-        Node a = new Node(port, folderName);
-
-        IscTorrentGUI visualizadorA = new IscTorrentGUI(a);
+    public static void main(String[] args) throws UnknownHostException {
+        IscTorrentGUI visualizadorA = new IscTorrentGUI(Integer.parseInt(args[0]));
         visualizadorA.setVisible(true);
 
     }

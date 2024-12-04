@@ -32,12 +32,9 @@ public class NodeAgent extends Thread {
         }
     }
 
-    public void sendFilesList(List<String> files) {
-
-        String[] filesList = files.toArray(new String[0]);
-
+    public void sendFileSearchResult(List<FileSearchResult> results) {
         try {
-            out.writeObject(filesList);
+            out.writeObject(results);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -45,15 +42,14 @@ public class NodeAgent extends Thread {
 
     // Faz o pedido da lista dos ficheiros para os nós ligados
     // Para garantir o funcionamento na função searchMusic temos que garantir que esta função só acabe quando a lista receivedList for alterada.
-    public void requestFilesList(){
+    public void searchMusicByWord(WordSearchMessage message) {
         try {
-            int beforeRequest = node.getReceivedFilesList().size();
-            System.out.println("Enviando REQUEST_FILES_LIST para o servidor: " + socket);
-            out.writeObject("REQUEST_FILES_LIST");
+            System.out.println("Enviando pedido de musicas com " + message + " para o servidor: " + socket);
+            out.writeObject(message);
 
 
         } catch (IOException e) {
-            System.err.println("Erro ao enviar REQUEST_FILES_LIST: " + e.getMessage());
+            System.err.println("Erro no pedido de musicas com " + message + ": " + e.getMessage());
         }
     }
 
@@ -78,17 +74,14 @@ public class NodeAgent extends Thread {
             while (true) {
                 Object obj = in.readObject();
                 switch (obj) {
-                    case String requestType when requestType.equals("REQUEST_FILES_LIST") -> {
-                        System.out.println("Solicitação de lista de arquivos recebida.");
-                        node.updateFilesList();
-                        sendFilesList(node.getFiles());
+                    case WordSearchMessage wordSearchMessage ->{
+                        System.out.println("Solicitação de lista de musicas com " + wordSearchMessage);
+                        sendFileSearchResult(node.getMusicByWord(wordSearchMessage));
                     }
-
-                    case String [] filesList -> {
-
-                        node.appendFilesToReceivedFiles(filesList);
-                        node.decreaseWaitNodes();
-
+                    case List<?> fileSearchResult -> {
+                        if(fileSearchResult.stream().allMatch(x -> x instanceof FileSearchResult)) {
+                            node.receiveMusicSearchResult((List<FileSearchResult>) fileSearchResult);
+                        }
                     }
                     case NewConnectionRequest request -> {
                         System.out.println("Request received from client: " + request);
