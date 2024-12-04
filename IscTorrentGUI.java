@@ -59,6 +59,7 @@ public class IscTorrentGUI extends JFrame {
                     message+=" [" + fileSearchResult.getAddress() + "/" + fileSearchResult.getPort() + "] ";
                 }
                 System.out.println(message);
+                node.requestDownload(searchHashMap.get(selectedHash));
                 startDownload();
             }
         });
@@ -140,13 +141,5 @@ public class IscTorrentGUI extends JFrame {
             model.addElement(searchHashMap.get(hash).getFirst().getFileName() + " [" + hash + "] " + "(" + searchHashMap.get(hash).size() + ")");
         }
         resultsList.setModel(model); // Definindo o novo modelo no JList
-
-//        DefaultListModel<String> model = new DefaultListModel<>();
-//        Map<Integer, List<FileSearchResult>> results = FileSearchResult.hashMap(musicSearchResult);
-//        List<Integer> hashes = results.keySet().stream().toList();
-//        for (Integer hash : hashes) {
-//            model.addElement(results.get(hash).getFirst().getFileName() + "(" + hash + ")" + "(" + results.get(hash).size() + ")");
-//        }
-//        resultsList.setModel(model); // Definindo o novo modelo no JList
     }
 }

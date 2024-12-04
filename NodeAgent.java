@@ -15,6 +15,10 @@ public class NodeAgent extends Thread {
         doConnections();
     }
 
+    public Socket getSocket() {
+        return socket;
+    }
+
     @Override
     public void run() {
 

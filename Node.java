@@ -75,22 +75,6 @@ public class Node {
         }).start();
     }
 
-    // Função para associar o número de aparições de uma musica x na lista como cada musica
-    // Resumindo: Numeros de nós que possuem uma musica x
-    public Map<String, Integer> countFileOccurrences(List<String> receivedFiles) {
-
-        Map<String, Integer> fileCounts = new HashMap<>();
-
-        synchronized (receivedFiles) {
-            for (String file : receivedFiles) {
-                // Incrementa o contador ou inicializa como 1
-                fileCounts.put(file, fileCounts.getOrDefault(file, 0) + 1);
-            }
-        }
-
-        return fileCounts;
-    }
-
     // Função para buscar as music que possuam no nome a palavra introduzida no "Procurar"
     public void searchMusic(String wordToSearch) {
         musicSearchResult.clear();
@@ -106,16 +90,6 @@ public class Node {
         notifyAll();
     }
 
-//    // To append filesReceived
-//    public void appendFilesToReceivedFiles(String[] filesList) {
-//        lock.lock();  // Bloqueia a operação enquanto modifica a lista
-//        try {
-//            receivedFiles.addAll(Arrays.asList(filesList));  // Modifica a lista de forma segura
-//        } finally {
-//            lock.unlock();  // Desbloqueia para permitir o acesso de outros threads
-//        }
-//    }
-
 
 
     // Função para criar/atualizar a lista de filmes.
@@ -129,17 +103,6 @@ public class Node {
         }
         return files;
     }
-
-//    // Lista de files recebidos através da utilização de "Procurar"
-//    public List<String> getReceivedFilesList() {
-//        lock.lock();
-//        try {
-//            return new ArrayList<>(receivedFiles);  // Retorna uma cópia da lista para evitar problemas de concorrência
-//        } finally {
-//            lock.unlock();
-//        }
-//    }
-
 
     @Override
     public String toString() {
@@ -166,5 +129,11 @@ public class Node {
             }
         }
         return results;
+    }
+
+    public void requestDownload(List<FileSearchResult> fileSearchResults) {
+        for (NodeAgent nodeAgent : nodeAgentList) {
+            System.out.println(nodeAgent.getSocket().getPort() + " " + nodeAgent.getSocket());
+        }
     }
 }
