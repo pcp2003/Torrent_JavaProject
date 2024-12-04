@@ -54,6 +54,10 @@ public class FileSearchResult implements Serializable {
         return port;
     }
 
+    public Long getFileSize() {
+        return fileSize;
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (obj instanceof FileSearchResult) {

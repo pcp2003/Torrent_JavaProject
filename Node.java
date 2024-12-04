@@ -4,6 +4,7 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
 public class Node {
@@ -130,11 +131,18 @@ public class Node {
         return results;
     }
 
-    public void requestDownload(List<FileSearchResult> fileSearchResults) {
+    public void requestDownload(List<FileSearchResult> fileSearchResults){
+        FileSearchResult result = fileSearchResults.getFirst();
+        List<NodeAgent> canDownload = new ArrayList<>();
         for (NodeAgent nodeAgent : nodeAgentList) {
-            if(nodeAgent.getSocket().getInetAddress().equals(fileSearchResults.getFirst().getAddress())) {
-                System.out.println(nodeAgent.getClientPort() + " " + nodeAgent.getSocket().getInetAddress());
+            for(FileSearchResult fileSearchResult : fileSearchResults) {
+                if (nodeAgent.getClientPort() == fileSearchResult.getPort()) {
+                    canDownload.add(nodeAgent);
+                }
             }
         }
+
+        DownloadTaskManager dtm = new DownloadTaskManager(result.getHash(), result.getFileSize(), canDownload);
+        dtm.startDownload();
     }
 }
