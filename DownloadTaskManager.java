@@ -2,24 +2,6 @@ import java.util.*;
 
 public class DownloadTaskManager{
 
-    public class DownloadTaskThread extends Thread{
-        @Override
-        public void run(){
-            boolean listFinished = false;
-            while(!listFinished){
-                for(NodeAgent nodeAgent: nodeAgentList){
-                    FileBlockRequestMessage nextFileBlock = getNextFileBlockRequestMessage();
-                    if(nextFileBlock != null){
-                        nodeAgent.sendObject(nextFileBlock);
-                    }else{
-                        listFinished = true;
-                        break;
-                    }
-                }
-            }
-        }
-    }
-
     private static final int BLOCK_SIZE = 10240;
 
     private final List<FileBlockRequestMessage> fileBlockRequestMessageList = new ArrayList<FileBlockRequestMessage>();
@@ -27,6 +9,7 @@ public class DownloadTaskManager{
     private List<NodeAgent> nodeAgentList;
 
     DownloadTaskManager(int hashValue, Long fileLenght, List<NodeAgent> nodeAgentList){
+
         this.nodeAgentList = nodeAgentList;
         int nFullBlocks = (int) (fileLenght / BLOCK_SIZE);
         for (int i = 0; i < nFullBlocks; i++) {
@@ -36,15 +19,27 @@ public class DownloadTaskManager{
         long rest = fileLenght - lastOffset;
         if (rest > 0) fileBlockRequestMessageList.add(new FileBlockRequestMessage(hashValue, lastOffset, rest));
 
-
     }
 
-    private synchronized FileBlockRequestMessage getNextFileBlockRequestMessage() {
+    public void sendFileBlocksToAgents () {
+
+        while(!fileBlockRequestMessageList.isEmpty()) {
+            for(NodeAgent nodeAgent: nodeAgentList){
+                FileBlockRequestMessage nextFileBlock = getNextFileBlockRequestMessage();
+                if(nextFileBlock != null){
+                    nodeAgent.sendObject(nextFileBlock);
+                }else{
+                    break;
+                }
+            }
+        }
+    }
+
+    private FileBlockRequestMessage getNextFileBlockRequestMessage() {
+
         if(fileBlockRequestMessageList.isEmpty()) return null;
-        FileBlockRequestMessage fbrm = fileBlockRequestMessageList.getFirst();
-        fileBlockRequestMessageList.remove(fbrm);
-        notifyAll();
-        return fbrm;
+
+        return fileBlockRequestMessageList.removeFirst();
     }
 
     public void startDownload() {

@@ -15,12 +15,8 @@ public class Node {
         public void run() {
 
             while (true) {
-                try {
-                    NodeAgentTask<FileBlockRequestMessage> fileBlockResquestMessage = getFileBlockResquestMessage();
 
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
+                NodeAgentTask<FileBlockRequestMessage> fileBlockResquestMessage = getFileBlockResquestMessageFromList();
 
             }
         }
@@ -187,11 +183,19 @@ public class Node {
 
     }
 
-    public NodeAgentTask<FileBlockRequestMessage> getFileBlockResquestMessage() throws InterruptedException {
-        while(fileBlockRequestMessages.isEmpty()) {wait();};
-        NodeAgentTask<FileBlockRequestMessage> fileBlockResquestMessage = fileBlockRequestMessages.removeFirst();
+    public synchronized NodeAgentTask<FileBlockRequestMessage> getFileBlockResquestMessageFromList() {
+
+        while(fileBlockRequestMessages.isEmpty()) {
+            try {
+                wait();
+            }catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        NodeAgentTask<FileBlockRequestMessage> fileBlockRequestMessage = fileBlockRequestMessages.removeFirst();
         notifyAll();
-        return fileBlockResquestMessage;
+        return fileBlockRequestMessage;
 
     }
 
