@@ -1,6 +1,5 @@
 import java.io.*;
 import java.net.Socket;
-import java.util.Arrays;
 import java.util.List;
 
 public class NodeAgent extends Thread {
@@ -9,11 +8,13 @@ public class NodeAgent extends Thread {
     private ObjectInputStream in;
     private ObjectOutputStream out;
     private Socket socket;
+    private int clientPort;
 
 
     public NodeAgent(Node node, Socket socket) {
         this.node = node;
         this.socket = socket;
+        clientPort = socket.getPort();
         doConnections();
     }
 
@@ -28,28 +29,9 @@ public class NodeAgent extends Thread {
 
     }
 
-    public void sendRequestFileBlock (FileBlockRequestMessage fileBlockRequest) {
-
+    public <T> void sendObject (T object) {
         try {
-            out.writeObject(fileBlockRequest);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    // Envia pedidos de cone
-    public void sendConnectionRequest(NewConnectionRequest request) {
-
-        try {
-            out.writeObject(request);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public void sendFileSearchResult(List<FileSearchResult> results) {
-        try {
-            out.writeObject(results);
+            out.writeObject(object);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -91,19 +73,27 @@ public class NodeAgent extends Thread {
                 switch (obj) {
                     case WordSearchMessage wordSearchMessage ->{
                         System.out.println("Solicitação de lista de musicas com " + wordSearchMessage);
-                        sendFileSearchResult(node.getMusicByWord(wordSearchMessage));
-                    }
-                    case List<?> fileSearchResult -> {
-                        if(fileSearchResult.stream().allMatch(x -> x instanceof FileSearchResult)) {
-                            node.receiveMusicSearchResult((List<FileSearchResult>) fileSearchResult);
-                        }
+                        sendObject(node.getMusicByWord(wordSearchMessage));
                     }
                     case NewConnectionRequest request -> {
                         System.out.println("Request received from client: " + request);
+                        clientPort = request.getPort();
                     }
+                    case FileBlockRequestMessage fileBlockRequest -> {
 
+                        node.receiveFileRequest(fileBlockRequest, this);
+                    }
                     case FileBlockAnswerMessage FileBlockAnswerMessage -> {
 
+                        
+                    }
+                    case List<?> fileSearchResults -> {
+
+                        if(fileSearchResults.stream().allMatch(x -> x instanceof FileSearchResult)) {
+
+                            node.receiveMusicSearchResult((List<FileSearchResult>) fileSearchResults);
+
+                        }
                     }
                     default -> System.out.println("Tipo desconhecido: " + obj);
                 }
@@ -114,7 +104,9 @@ public class NodeAgent extends Thread {
         }
     }
 
-
+    public int getClientPort() {
+        return clientPort;
+    }
 
     @Override
     public String toString() {
