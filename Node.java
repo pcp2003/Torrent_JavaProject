@@ -18,7 +18,6 @@ public class Node {
                 try {
                     NodeAgentTask<FileBlockRequestMessage> fileBlockResquestMessage = getFileBlockResquestMessage();
 
-
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
