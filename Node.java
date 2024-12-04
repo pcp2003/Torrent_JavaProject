@@ -9,15 +9,38 @@ import java.util.*;
 
 public class Node {
 
-    public class fileBlockResquestMessageHandler extends Thread {
+    public class FileBlockResquestMessageHandler extends Thread {
 
         @Override
         public void run() {
 
             while (true) {
+                try {
+                    NodeAgentTask<FileBlockRequestMessage> fileBlockResquestMessage = getFileBlockResquestMessage();
 
+
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
 
             }
+        }
+    }
+
+    public class NodeAgentTask<T>{
+        private T task;
+        private NodeAgent nodeAgent;
+        NodeAgentTask(T task, NodeAgent nodeAgent){
+            this.task = task;
+            this.nodeAgent = nodeAgent;
+        }
+
+        public T getTask() {
+            return task;
+        }
+
+        public NodeAgent getNodeAgent() {
+            return nodeAgent;
         }
     }
 
@@ -27,7 +50,7 @@ public class Node {
     private String pathToFolder;
     private final List<NodeAgent> nodeAgentList;
     private List<FileSearchResult> musicSearchResult = new ArrayList<>();
-    private Map<FileBlockRequestMessage, NodeAgent> fileBlockRequestMessagesMap = new HashMap<>();
+    private List<NodeAgentTask<FileBlockRequestMessage>> fileBlockRequestMessages = new ArrayList<>();
     private IscTorrentGUI gui;
 
 
@@ -159,14 +182,18 @@ public class Node {
         dtm.startDownload();
     }
 
-    public void receiveFileRequest (FileBlockRequestMessage fileBlockRequestMessage, NodeAgent nodeAgent) {
-
-        fileBlockRequestMessagesMap.put(fileBlockRequestMessage, nodeAgent);
+    public synchronized void receiveFileRequest (FileBlockRequestMessage fileBlockRequestMessage, NodeAgent nodeAgent) {
+        fileBlockRequestMessages.add(new NodeAgentTask<>(fileBlockRequestMessage, nodeAgent));
+        notifyAll();
 
     }
 
-    public void checkFileBlockResquestMessage() {
-        wait();
+    public NodeAgentTask<FileBlockRequestMessage> getFileBlockResquestMessage() throws InterruptedException {
+        while(fileBlockRequestMessages.isEmpty()) {wait();};
+        NodeAgentTask<FileBlockRequestMessage> fileBlockResquestMessage = fileBlockRequestMessages.removeFirst();
+        notifyAll();
+        return fileBlockResquestMessage;
+
     }
 
 
