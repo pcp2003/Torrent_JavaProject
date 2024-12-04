@@ -9,9 +9,12 @@ public class NodeAgent extends Thread {
     private ObjectOutputStream out;
     private Socket socket;
 
+    private int clientPort;
+
     public NodeAgent(Node node, Socket socket) {
         this.node = node;
         this.socket = socket;
+        clientPort = socket.getPort();
         doConnections();
     }
 
@@ -89,6 +92,7 @@ public class NodeAgent extends Thread {
                     }
                     case NewConnectionRequest request -> {
                         System.out.println("Request received from client: " + request);
+                        clientPort = request.getPort();
                     }
                     default -> System.out.println("Tipo desconhecido: " + obj);
                 }
@@ -99,7 +103,9 @@ public class NodeAgent extends Thread {
         }
     }
 
-
+    public int getClientPort() {
+        return clientPort;
+    }
 
     @Override
     public String toString() {

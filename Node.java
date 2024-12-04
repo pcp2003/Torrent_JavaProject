@@ -133,7 +133,7 @@ public class Node {
     public void requestDownload(List<FileSearchResult> fileSearchResults) {
         for (NodeAgent nodeAgent : nodeAgentList) {
             if(nodeAgent.getSocket().getInetAddress().equals(fileSearchResults.getFirst().getAddress())) {
-                System.out.println(nodeAgent.getSocket().getPort() + " " + nodeAgent.getSocket().getInetAddress());
+                System.out.println(nodeAgent.getClientPort() + " " + nodeAgent.getSocket().getInetAddress());
             }
         }
     }

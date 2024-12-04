@@ -1,6 +1,7 @@
 import java.io.Serializable;
 
 public class NewConnectionRequest implements Serializable {
+
     private int port;
 
     public NewConnectionRequest(int port) {
@@ -12,6 +13,10 @@ public class NewConnectionRequest implements Serializable {
         return "NewConnectionRequest{" +
                 "port=" + port +
                 '}';
+    }
+
+    public int getPort() {
+        return port;
     }
 
 }
