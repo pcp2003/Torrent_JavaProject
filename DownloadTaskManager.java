@@ -7,10 +7,13 @@ public class DownloadTaskManager{
             boolean listFinished = false;
             while(!listFinished){
                 for(NodeAgent nodeAgent: nodeAgentList){
-
                     FileBlockRequestMessage nextFileBlock = getNextFileBlockRequestMessage();
-                    if(nextFileBlock != null){listFinished = true; break;};
-                    nodeAgent.sendRequestFileBlock();
+                    if(nextFileBlock != null){
+                        nodeAgent.sendObject(nextFileBlock);
+                    }else{
+                        listFinished = true;
+                        break;
+                    }
                 }
             }
         }
@@ -34,7 +37,8 @@ public class DownloadTaskManager{
 
     }
 
-    private synchronized FileBlockRequestMessage getFileBlockRequestMessage() {
+    private synchronized FileBlockRequestMessage getNextFileBlockRequestMessage() {
+        if(fileBlockRequestMessageList.isEmpty()) return null;
         FileBlockRequestMessage fbrm = fileBlockRequestMessageList.getFirst();
         fileBlockRequestMessageList.remove(fbrm);
         notifyAll();
