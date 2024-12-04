@@ -20,7 +20,7 @@ public class IscTorrentGUI extends JFrame {
     private Map<Integer, List<FileSearchResult>> searchHashMap = new HashMap<>();
 
     public IscTorrentGUI(int id) throws UnknownHostException {
-        this.node = new Node(this, InetAddress.getLocalHost(), 8080 + id, "dl" + id);
+        this.node = new Node(this,8080 + id, "dl" + id);
         setTitle("IscTorrent " +  "localhost" + ":" + node.getPort());
         setSize(400, 300);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -105,7 +105,12 @@ public class IscTorrentGUI extends JFrame {
 
             public void actionPerformed(ActionEvent e) {
 
-                String addr = addressField.getText();
+                InetAddress addr = null;
+                try {
+                    addr = InetAddress.getByName(addressField.getText());
+                } catch (UnknownHostException ex) {
+                    throw new RuntimeException(ex);
+                }
                 int port = Integer.parseInt(portField.getText());
 
                 node.connectClient( addr, port, node.getConnectionRequest());

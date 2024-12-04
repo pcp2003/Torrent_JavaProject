@@ -3,6 +3,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.*;
 
 public class Node {
@@ -16,9 +17,9 @@ public class Node {
     public volatile int waitNodesLists = 0;
     private IscTorrentGUI gui;
 
-    public Node(IscTorrentGUI gui, InetAddress address, int port, String folderName) {
+    public Node(IscTorrentGUI gui,int port, String folderName) throws UnknownHostException {
         this.gui = gui;
-        this.address = address;
+        this.address = InetAddress.getByName("localhost");
         this.port = port;
         this.pathToFolder = ("folders" + File.separator + folderName);
         this.request = new NewConnectionRequest(port);
@@ -27,13 +28,11 @@ public class Node {
     }
 
     // Função para um cliente se conectar a um servidor de um nó que não seja servidor de si próprio.
-    void connectClient(String addr, int serverPort, NewConnectionRequest request) {
+    void connectClient(InetAddress addr, int serverPort, NewConnectionRequest request) {
 
         if ( !(serverPort == port) ) {
             try {
-
-                InetAddress endereco = InetAddress.getByName(addr);
-                Socket clientSocket = new Socket(endereco, serverPort);
+                Socket clientSocket = new Socket(addr, serverPort);
                 NodeAgent nodeAgent = new NodeAgent(this, clientSocket); // Cria o agent reponsavel pelo socket do cliente
                 nodeAgent.start();
                 nodeAgentList.add(nodeAgent);
@@ -133,7 +132,9 @@ public class Node {
 
     public void requestDownload(List<FileSearchResult> fileSearchResults) {
         for (NodeAgent nodeAgent : nodeAgentList) {
-            System.out.println(nodeAgent.getSocket().getPort() + " " + nodeAgent.getSocket());
+            if(nodeAgent.getSocket().getInetAddress().equals(fileSearchResults.getFirst().getAddress())) {
+                System.out.println(nodeAgent.getSocket().getPort() + " " + nodeAgent.getSocket().getInetAddress());
+            }
         }
     }
 }
