@@ -53,6 +53,8 @@ public class IscTorrentGUI extends JFrame {
 
         downloadButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
+
+
                 Integer selectedHash = searchHashMap.keySet().stream().toList().get(resultsList.getSelectedIndex());
                 String message = "A fazer download de " + searchHashMap.get(selectedHash).getFirst().getFileName() + " através de " +  searchHashMap.get(selectedHash).size() + " nós";
                 for(FileSearchResult fileSearchResult : searchHashMap.get(selectedHash)){

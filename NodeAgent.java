@@ -4,17 +4,16 @@ import java.util.Arrays;
 import java.util.List;
 
 public class NodeAgent extends Thread {
+
     private Node node;
     private ObjectInputStream in;
     private ObjectOutputStream out;
     private Socket socket;
 
-    private int clientPort;
 
     public NodeAgent(Node node, Socket socket) {
         this.node = node;
         this.socket = socket;
-        clientPort = socket.getPort();
         doConnections();
     }
 
@@ -27,6 +26,15 @@ public class NodeAgent extends Thread {
 
         serve();
 
+    }
+
+    public void sendRequestFileBlock (FileBlockRequestMessage fileBlockRequest) {
+
+        try {
+            out.writeObject(fileBlockRequest);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     // Envia pedidos de cone
@@ -92,7 +100,10 @@ public class NodeAgent extends Thread {
                     }
                     case NewConnectionRequest request -> {
                         System.out.println("Request received from client: " + request);
-                        clientPort = request.getPort();
+                    }
+
+                    case FileBlockAnswerMessage FileBlockAnswerMessage -> {
+
                     }
                     default -> System.out.println("Tipo desconhecido: " + obj);
                 }
@@ -103,9 +114,7 @@ public class NodeAgent extends Thread {
         }
     }
 
-    public int getClientPort() {
-        return clientPort;
-    }
+
 
     @Override
     public String toString() {
