@@ -1,6 +1,7 @@
 import java.util.*;
 
 public class DownloadTaskManager{
+
     public class DownloadTaskThread extends Thread{
         @Override
         public void run(){
@@ -22,6 +23,7 @@ public class DownloadTaskManager{
     private static final int BLOCK_SIZE = 10240;
 
     private final List<FileBlockRequestMessage> fileBlockRequestMessageList = new ArrayList<FileBlockRequestMessage>();
+
     private List<NodeAgent> nodeAgentList;
 
     DownloadTaskManager(int hashValue, Long fileLenght, List<NodeAgent> nodeAgentList){

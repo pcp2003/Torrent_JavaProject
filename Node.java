@@ -9,14 +9,27 @@ import java.util.*;
 
 public class Node {
 
+    public class fileBlockResquestMessageHandler extends Thread {
+
+        @Override
+        public void run() {
+
+            while (true) {
+
+
+            }
+        }
+    }
+
     private final InetAddress address;
     private final int port;
     public NewConnectionRequest request;
     private String pathToFolder;
     private final List<NodeAgent> nodeAgentList;
     private List<FileSearchResult> musicSearchResult = new ArrayList<>();
-    public volatile int waitNodesLists = 0;
+    private Map<FileBlockRequestMessage, NodeAgent> fileBlockRequestMessagesMap = new HashMap<>();
     private IscTorrentGUI gui;
+
 
     public Node(IscTorrentGUI gui,int port, String folderName) throws UnknownHostException {
         this.gui = gui;
@@ -37,7 +50,7 @@ public class Node {
                 NodeAgent nodeAgent = new NodeAgent(this, clientSocket); // Cria o agent reponsavel pelo socket do cliente
                 nodeAgent.start();
                 nodeAgentList.add(nodeAgent);
-                nodeAgent.sendConnectionRequest(request);
+                nodeAgent.sendObject(request);
 
             } catch (IOException e) {
                 System.err.println("Erro ao conectar ao servidor: " + e.getMessage());
@@ -145,4 +158,16 @@ public class Node {
         DownloadTaskManager dtm = new DownloadTaskManager(result.getHash(), result.getFileSize(), canDownload);
         dtm.startDownload();
     }
+
+    public void receiveFileRequest (FileBlockRequestMessage fileBlockRequestMessage, NodeAgent nodeAgent) {
+
+        fileBlockRequestMessagesMap.put(fileBlockRequestMessage, nodeAgent);
+
+    }
+
+    public void checkFileBlockResquestMessage() {
+        wait();
+    }
+
+
 }
