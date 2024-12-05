@@ -32,4 +32,13 @@ public class FileBlockAnswerMessage {
                 ", data=" + Arrays.toString(data) +
                 '}';
     }
+
+    public int getHash() {
+        return fileHash;
+    }
+
+    public long getOffset() {
+        return offset;
+    }
+
 }

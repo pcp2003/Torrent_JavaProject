@@ -26,4 +26,11 @@ public class FileBlockRequestMessage {
                 '}';
     }
 
+    public int getHash() {
+        return fileHash;
+    }
+
+    public long getOffset() {
+        return offset;
+    }
 }

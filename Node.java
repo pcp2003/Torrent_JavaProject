@@ -52,6 +52,7 @@ public class Node {
     private List<FileSearchResult> musicSearchResult = new ArrayList<>();
     private List<NodeAgentTask<FileBlockRequestMessage>> fileBlockRequestMessages = new ArrayList<>();
     private IscTorrentGUI gui;
+    private final int THREADPOOL_NR_OF_THREADS = 5;
 
 
     public Node(IscTorrentGUI gui,int port, String folderName) throws UnknownHostException {
@@ -168,6 +169,7 @@ public class Node {
     }
 
     public void requestDownload(List<FileSearchResult> fileSearchResults){
+
         FileSearchResult result = fileSearchResults.getFirst();
         List<NodeAgent> canDownload = new ArrayList<>();
         for (NodeAgent nodeAgent : nodeAgentList) {
@@ -178,8 +180,9 @@ public class Node {
             }
         }
 
-        DownloadTaskManager dtm = new DownloadTaskManager(result.getHash(), result.getFileSize(), canDownload);
+        DownloadTaskManager dtm = new DownloadTaskManager(result.getHash(), result.getFileSize(), canDownload, THREADPOOL_NR_OF_THREADS);
         dtm.startDownload();
+
     }
 
     public synchronized void receiveFileRequest (FileBlockRequestMessage fileBlockRequestMessage, NodeAgent nodeAgent) {

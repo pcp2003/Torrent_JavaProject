@@ -1,60 +1,91 @@
 import java.util.*;
+import java.util.concurrent.*;
 
-public class DownloadTaskManager{
+public class DownloadTaskManager {
 
-    public class DownloadTaskThread extends Thread{
-        @Override
-        public void run(){
-            boolean listFinished = false;
-            while(!listFinished){
-                for(NodeAgent nodeAgent: nodeAgentList){
-                    FileBlockRequestMessage nextFileBlock = getNextFileBlockRequestMessage();
-                    if(nextFileBlock != null){
-                        nodeAgent.sendObject(nextFileBlock);
-                    }else{
-                        listFinished = true;
-                        break;
+    private static final int BLOCK_SIZE = 10240;
+
+    private final LinkedList<FileBlockRequestMessage> fileBlockRequestList = new LinkedList<>();
+    private final List<FileBlockAnswerMessage> fileBlockAnswers = new ArrayList<>();
+    private final List<NodeAgent> nodeAgentList;
+    private final ExecutorService threadPool;
+
+    public DownloadTaskManager(int hashValue, long fileLength, List<NodeAgent> nodeAgentList, int maxThreads) {
+        this.nodeAgentList = nodeAgentList;
+        this.threadPool = Executors.newFixedThreadPool(maxThreads);
+
+        // Divide o arquivo em blocos
+        int nFullBlocks = (int) (fileLength / BLOCK_SIZE);
+        for (int i = 0; i < nFullBlocks; i++) {
+            fileBlockRequestList.add(new FileBlockRequestMessage(hashValue, (long) i * BLOCK_SIZE, BLOCK_SIZE));
+        }
+        long lastOffset = (long) nFullBlocks * BLOCK_SIZE;
+        long rest = fileLength - lastOffset;
+        if (rest > 0) {
+            fileBlockRequestList.add(new FileBlockRequestMessage(hashValue, lastOffset, rest));
+        }
+    }
+
+    // Método que inicia o download
+    public void startDownload() {
+
+        for (NodeAgent nodeAgent : nodeAgentList) {
+            threadPool.execute(() -> {
+                while (!fileBlockRequestList.isEmpty()) {
+                    FileBlockRequestMessage blockRequest;
+                    synchronized (fileBlockRequestList) {
+                        blockRequest = fileBlockRequestList.removeFirst();
+                    }
+                    if (blockRequest != null) {
+                        processBlockRequest(blockRequest, nodeAgent);
                     }
                 }
+            });
+        }
+        threadPool.shutdown(); // Finaliza o pool após todas as tarefas
+    }
+
+    // Processa uma requisição de bloco
+    private void processBlockRequest(FileBlockRequestMessage blockRequest, NodeAgent nodeAgent) {
+        try {
+
+            nodeAgent.sendObject(blockRequest);
+
+            // Espera pela resposta correspondente
+            FileBlockAnswerMessage response = waitForResponse(blockRequest);
+
+
+
+        } catch (Exception e) {
+            System.err.println("Erro ao processar bloco: " + blockRequest.getOffset());
+            e.printStackTrace();
+        }
+    }
+
+    // Aguarda por uma resposta correspondente
+    private synchronized FileBlockAnswerMessage waitForResponse(FileBlockRequestMessage request)  {
+
+        while (true) {
+
+            for ( FileBlockAnswerMessage answer : fileBlockAnswers) {
+
+                if (answer.getOffset() == request.getOffset() && answer.getHash() == request.getHash()) {
+                    System.out.println("Bloco baixado com sucesso: " + answer.getOffset());
+                }
+
+            }
+
+            try {
+                wait(); // Aguarda por uma nova resposta
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
             }
         }
     }
 
-    private static final int BLOCK_SIZE = 10240;
-
-    private final List<FileBlockRequestMessage> fileBlockRequestMessageList = new ArrayList<FileBlockRequestMessage>();
-
-    private List<NodeAgent> nodeAgentList;
-
-    DownloadTaskManager(int hashValue, Long fileLenght, List<NodeAgent> nodeAgentList){
-        this.nodeAgentList = nodeAgentList;
-        int nFullBlocks = (int) (fileLenght / BLOCK_SIZE);
-        for (int i = 0; i < nFullBlocks; i++) {
-            fileBlockRequestMessageList.add(new FileBlockRequestMessage(hashValue, (long) i * BLOCK_SIZE, BLOCK_SIZE));
-        }
-        long lastOffset = (long) nFullBlocks * BLOCK_SIZE;
-        long rest = fileLenght - lastOffset;
-        if (rest > 0) fileBlockRequestMessageList.add(new FileBlockRequestMessage(hashValue, lastOffset, rest));
-
-
+    // Método para adicionar respostas recebidas
+    public synchronized void addFileBlockAnswer(FileBlockAnswerMessage answer) {
+        fileBlockAnswers.add(answer);
+        notifyAll(); // Notifica todas as threads aguardando
     }
-
-    private synchronized FileBlockRequestMessage getNextFileBlockRequestMessage() {
-        if(fileBlockRequestMessageList.isEmpty()) return null;
-        FileBlockRequestMessage fbrm = fileBlockRequestMessageList.getFirst();
-        fileBlockRequestMessageList.remove(fbrm);
-        notifyAll();
-        return fbrm;
-    }
-
-    public void startDownload() {
-
-    }
-
-    public List<FileBlockRequestMessage> getFileBlockRequestMessageList() {
-        return fileBlockRequestMessageList;
-    }
-
-
-
 }
