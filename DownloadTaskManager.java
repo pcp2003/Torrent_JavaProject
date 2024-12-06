@@ -5,10 +5,10 @@ public class DownloadTaskManager {
 
     private static final int BLOCK_SIZE = 10240;
 
-    private final LinkedList<FileBlockRequestMessage> fileBlockRequestList = new LinkedList<>();
+    private final List<FileBlockRequestMessage> fileBlockRequestList = new LinkedList<>();
     private final List<FileBlockAnswerMessage> fileBlockAnswers = new ArrayList<>();
     private final List<NodeAgent> nodeAgentList;
-    private final ExecutorService threadPool;
+    private final ExecutorService threadPool;  // A função da Threads é apenas enviar
 
     public DownloadTaskManager(int hashValue, long fileLength, List<NodeAgent> nodeAgentList, int maxThreads) {
         this.nodeAgentList = nodeAgentList;
@@ -26,51 +26,48 @@ public class DownloadTaskManager {
         }
     }
 
-    // Método que inicia o download
+    //  Inicia o download
     public void startDownload() {
 
-        for (NodeAgent nodeAgent : nodeAgentList) {
-            threadPool.execute(() -> {
-                while (!fileBlockRequestList.isEmpty()) {
-                    FileBlockRequestMessage blockRequest;
-                    synchronized (fileBlockRequestList) {
-                        blockRequest = fileBlockRequestList.removeFirst();
-                    }
-                    if (blockRequest != null) {
-                        processBlockRequest(blockRequest, nodeAgent);
-                    }
-                }
-            });
-        }
-        threadPool.shutdown(); // Finaliza o pool após todas as tarefas
-    }
-
-    // Processa uma requisição de bloco
-    private void processBlockRequest(FileBlockRequestMessage blockRequest, NodeAgent nodeAgent) {
-        try {
-
-            nodeAgent.sendObject(blockRequest);
-
-            // Espera pela resposta correspondente
-            FileBlockAnswerMessage response = waitForResponse(blockRequest);
-
-
-
-        } catch (Exception e) {
-            System.err.println("Erro ao processar bloco: " + blockRequest.getOffset());
-            e.printStackTrace();
-        }
-    }
-
-    // Aguarda por uma resposta correspondente
-    private synchronized FileBlockAnswerMessage waitForResponse(FileBlockRequestMessage request)  {
+        int agentIndex = 0;
 
         while (true) {
 
+            FileBlockRequestMessage blockRequest = getNextBlockRequest();
+
+            if (blockRequest == null) {
+                break;
+            }
+
+            NodeAgent nodeAgent = nodeAgentList.get(agentIndex);
+
+            nodeAgent.sendObject(blockRequest);
+
+            agentIndex = (agentIndex + 1) % nodeAgentList.size(); // Alterna para o próximo agente (com rotação circular)
+
+        }
+    }
+
+    public synchronized FileBlockRequestMessage getNextBlockRequest () {
+
+        if (!fileBlockRequestList.isEmpty()) {
+            return fileBlockRequestList.remove(0);
+        }
+        return null;
+    }
+
+    // Aguarda por uma resposta correspondente
+    private synchronized void waitForResponse(FileBlockRequestMessage request)  {
+
+        while (true) {
+
+            // Verifica se a answer recebida corresponde a request enviada!
             for ( FileBlockAnswerMessage answer : fileBlockAnswers) {
 
                 if (answer.getOffset() == request.getOffset() && answer.getHash() == request.getHash()) {
-                    System.out.println("Bloco baixado com sucesso: " + answer.getOffset());
+
+                    System.out.println("Bloco baixado com sucesso: " + answer);
+                    return;
                 }
 
             }
@@ -83,7 +80,8 @@ public class DownloadTaskManager {
         }
     }
 
-    // Método para adicionar respostas recebidas
+    //  Adicionar respostas recebidas
+
     public synchronized void addFileBlockAnswer(FileBlockAnswerMessage answer) {
         fileBlockAnswers.add(answer);
         notifyAll(); // Notifica todas as threads aguardando
