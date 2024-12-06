@@ -8,11 +8,9 @@ public class DownloadTaskManager {
     private final List<FileBlockRequestMessage> fileBlockRequestList = new LinkedList<>();
     private final List<FileBlockAnswerMessage> fileBlockAnswers = new ArrayList<>();
     private final List<NodeAgent> nodeAgentList;
-    private final ExecutorService threadPool;  // A função da Threads é apenas enviar
 
-    public DownloadTaskManager(int hashValue, long fileLength, List<NodeAgent> nodeAgentList, int maxThreads) {
+    public DownloadTaskManager(int hashValue, long fileLength, List<NodeAgent> nodeAgentList) {
         this.nodeAgentList = nodeAgentList;
-        this.threadPool = Executors.newFixedThreadPool(maxThreads);
 
         // Divide o arquivo em blocos
         int nFullBlocks = (int) (fileLength / BLOCK_SIZE);
@@ -27,6 +25,7 @@ public class DownloadTaskManager {
     }
 
     //  Inicia o download
+    // Todo falta esperar pela resposta para enviar a proxima request para o mesmo no
     public void startDownload() {
 
         int agentIndex = 0;
@@ -51,7 +50,9 @@ public class DownloadTaskManager {
     public synchronized FileBlockRequestMessage getNextBlockRequest () {
 
         if (!fileBlockRequestList.isEmpty()) {
-            return fileBlockRequestList.remove(0);
+            FileBlockRequestMessage request = fileBlockRequestList.remove(0);
+            System.out.println("Sending request: " + request );
+            return request;
         }
         return null;
     }
