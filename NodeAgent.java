@@ -85,6 +85,7 @@ public class NodeAgent extends Thread {
                     }
                     case FileBlockAnswerMessage FileBlockAnswerMessage -> {
 
+                        node.receiveAnswer(FileBlockAnswerMessage);
                         
                     }
                     case List<?> fileSearchResults -> {

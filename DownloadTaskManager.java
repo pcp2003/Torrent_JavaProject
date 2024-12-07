@@ -6,7 +6,6 @@ public class DownloadTaskManager {
     private static final int BLOCK_SIZE = 10240;
 
     private final List<FileBlockRequestMessage> fileBlockRequestList = new LinkedList<>();
-    private final List<FileBlockAnswerMessage> fileBlockAnswers = new ArrayList<>();
     private final List<NodeAgent> nodeAgentList;
 
     public DownloadTaskManager(int hashValue, long fileLength, List<NodeAgent> nodeAgentList) {
@@ -24,13 +23,9 @@ public class DownloadTaskManager {
         }
     }
 
-    //  Inicia o download
-    // Todo falta esperar pela resposta para enviar a proxima request para o mesmo no
-    public void startDownload() {
+    public void sendRequests () {
 
-        int agentIndex = 0;
-
-        while (true) {
+        for (NodeAgent nodeAgent : nodeAgentList) {
 
             FileBlockRequestMessage blockRequest = getNextBlockRequest();
 
@@ -38,11 +33,9 @@ public class DownloadTaskManager {
                 break;
             }
 
-            NodeAgent nodeAgent = nodeAgentList.get(agentIndex);
+            System.out.println("Sending request: " + blockRequest );
 
             nodeAgent.sendObject(blockRequest);
-
-            agentIndex = (agentIndex + 1) % nodeAgentList.size(); // Alterna para o próximo agente (com rotação circular)
 
         }
     }
@@ -50,9 +43,8 @@ public class DownloadTaskManager {
     public synchronized FileBlockRequestMessage getNextBlockRequest () {
 
         if (!fileBlockRequestList.isEmpty()) {
-            FileBlockRequestMessage request = fileBlockRequestList.remove(0);
-            System.out.println("Sending request: " + request );
-            return request;
+
+            return fileBlockRequestList.removeFirst();
         }
         return null;
     }

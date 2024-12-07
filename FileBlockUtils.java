@@ -1,12 +1,9 @@
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.*;
 import java.util.List;
 
 public class FileBlockUtils {
 
-    public static FileBlockAnswerMessage readFileBlock(String filePath, long offset, long length) throws IOException {
+    public static FileBlockAnswerMessage readFileBlock(String filePath, long offset, long length) {
         File file = new File(filePath);
         int fileHash = filePath.hashCode();
 
@@ -18,12 +15,17 @@ public class FileBlockUtils {
         }
 
         byte[] data = new byte[(int) length];
+
         try (FileInputStream fis = new FileInputStream(file)) {
             fis.skip(offset);
             int bytesRead = fis.read(data);
             if (bytesRead != length) {
                 throw new IOException("Erro ao ler o ficheiro");
             }
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
 
         return new FileBlockAnswerMessage(fileHash, offset, length, data);

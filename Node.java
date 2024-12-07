@@ -11,31 +11,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class Node {
-    public class NodeAgentTask<T> {
-        private T task;
-        private NodeAgent nodeAgent;
-
-        NodeAgentTask(T task, NodeAgent nodeAgent) {
-            this.task = task;
-            this.nodeAgent = nodeAgent;
-        }
-
-        public T getTask() {
-            return task;
-        }
-
-        public NodeAgent getNodeAgent() {
-            return nodeAgent;
-        }
-
-        @Override
-        public String toString() {
-            return "NodeAgentTask{" +
-                    "task=" + task +
-                    ", nodeAgent=" + nodeAgent +
-                    '}';
-        }
-    }
 
     private final InetAddress address;
     private final int port;
@@ -44,6 +19,7 @@ public class Node {
     private final List<NodeAgent> nodeAgentList;
     private List<FileSearchResult> musicSearchResult = new ArrayList<>();
     private List<NodeAgentTask<FileBlockRequestMessage>> fileBlockRequestMessages = new ArrayList<>();
+    private List<NodeAgentTask<FileBlockAnswerMessage>> fileBlockAnswerMessages = new ArrayList<>();
     private IscTorrentGUI gui;
     private ExecutorService threadPool;
     private Map<Integer, DownloadTaskManager> downloadTaskManagerMap = new HashMap<>();
@@ -136,13 +112,6 @@ public class Node {
         return files;
     }
 
-    @Override
-    public String toString() {
-        return "Node{" +
-                "port=" + port +
-                '}';
-    }
-
     public int getPort() {
         return port;
     }
@@ -177,17 +146,24 @@ public class Node {
 
         DownloadTaskManager newDownloadTaskManager = new DownloadTaskManager(result.getHash(), result.getFileSize(), canDownload);
         downloadTaskManagerMap.put(result.getHash(), newDownloadTaskManager);
-        newDownloadTaskManager.startDownload();
+        newDownloadTaskManager.sendRequests(); // (1) 2, 3
+
+
 
     }
 
-    public synchronized void receiveFileRequest(FileBlockRequestMessage fileBlockRequestMessage, NodeAgent nodeAgent) {
+    public synchronized void receiveFileRequest(FileBlockRequestMessage fileBlockRequestMessage, NodeAgent nodeAgent) { // 1,(2),(3)
         fileBlockRequestMessages.add(new NodeAgentTask<>(fileBlockRequestMessage, nodeAgent));
         notifyAll();
 
     }
 
-    public NodeAgentTask<FileBlockRequestMessage> getFileBlockResquestMessage() {
+    public synchronized void receiveAnswer (FileBlockAnswerMessage fileBlockAnswerMessage ) { // (1), 2, 3
+
+    }
+
+
+    public NodeAgentTask<FileBlockRequestMessage> getFileBlockRequestMessage() { // 1, (2), (3)
 
         while (fileBlockRequestMessages.isEmpty()) {
             try {
@@ -197,23 +173,40 @@ public class Node {
             }
         }
 
-        NodeAgentTask<FileBlockRequestMessage> fileBlockResquestMessage = fileBlockRequestMessages.removeFirst();
+        NodeAgentTask<FileBlockRequestMessage> fileBlockRequestMessage = fileBlockRequestMessages.removeFirst();
         notifyAll();
-        return fileBlockResquestMessage;
+        return fileBlockRequestMessage;
 
     }
 
-    // TODO: A threpool deveria usar apenas uma thread por DownloadTaskManagerRequest
-    public void processRequestAndMakeAnswer () {
 
+    // TODO: A threpool deveria usar apenas uma thread por DownloadTaskManagerRequest
+
+    public void processRequestsAndMakeAnswers () { // 1, (2), (3)
+        
         threadPool.submit(() -> {
 
-            NodeAgentTask<FileBlockRequestMessage> request = getFileBlockResquestMessage();
+            NodeAgentTask<FileBlockRequestMessage> request = getFileBlockRequestMessage();
 
-            System.out.println("Making answer for " + request + " na thread " + Thread.currentThread().getName());
+            FileBlockAnswerMessage answer = FileBlockUtils.readFileBlock( pathToFolder, request.getTask().getOffset(), request.getTask().getLength());
+
+            System.out.println("Sending answer " + answer);
+
+            for (NodeAgent nodeAgent : nodeAgentList) {
+                if (nodeAgent.getClientPort() == request.getNodeAgent().getClientPort()) {
+                    nodeAgent.sendObject(answer);
+                }
+            }
 
 
         });
+    }
+
+    @Override
+    public String toString() {
+        return "Node{" +
+                "port=" + port +
+                '}';
     }
 
 
