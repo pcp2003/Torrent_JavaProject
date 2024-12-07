@@ -113,19 +113,6 @@ public class Node {
         return files;
     }
 
-    public String musicPathByHash (int musicHash){
-
-        for (File file : Objects.requireNonNull(new File(pathToFolder).listFiles())) {
-            if (file.isFile() && file.getName().endsWith("mp3")) {
-                if (musicHash == FileBlockUtils.hashValue(file)){
-                    return (pathToFolder + File.separator + file.getName());
-                }
-            }
-        }
-
-        return null;
-    }
-
 
     public int getPort() {
         return port;
@@ -159,9 +146,9 @@ public class Node {
             }
         }
 
-        DownloadTaskManager newDownloadTaskManager = new DownloadTaskManager(result.getHash(), result.getFileSize(), canDownload, pathToFolder);
+        DownloadTaskManager newDownloadTaskManager = new DownloadTaskManager(result.getHash(), result.getFileSize(), canDownload, pathToFolder, result.getFileName());
         downloadTaskManagerMap.put(result.getHash(), newDownloadTaskManager);
-        newDownloadTaskManager.startDownload(); // (1) 2, 3
+        newDownloadTaskManager.start(); // (1) 2, 3
 
     }
 
@@ -175,7 +162,7 @@ public class Node {
     }
 
     public synchronized void receiveAnswer (FileBlockAnswerMessage fileBlockAnswerMessage, NodeAgent nodeAgent ) { // (1), 2, 3
-        downloadTaskManagerMap.get(fileBlockAnswerMessage.getHash()).addFileBlockAnswer(fileBlockAnswerMessage);
+        downloadTaskManagerMap.get(fileBlockAnswerMessage.getHash()).addFileBlockAnswer(fileBlockAnswerMessage, nodeAgent);
     }
 
 
@@ -200,20 +187,19 @@ public class Node {
     public void processRequestsAndMakeAnswers() { // 1, (2), (3)
 
         threadPool.submit(() -> {
-            try {
-                NodeAgentTask<FileBlockRequestMessage> request = getFileBlockRequestMessage();
-                System.out.println("Processing: " + request);
+            while(true){
+                try {
+                    NodeAgentTask<FileBlockRequestMessage> request = getFileBlockRequestMessage();
+                    System.out.println("Processing: " + request);
 
-                FileBlockAnswerMessage answer = FileBlockUtils.readFileBlock(musicPathByHash(request.getTask().getHash()) , request.getTask().getOffset(), request.getTask().getLength());
-                System.out.println("Sending answer " + answer);
+                    FileBlockAnswerMessage answer = FileBlockUtils.readFileBlock(pathToFolder, request.getTask());
+                    System.out.println("Sending answer " + answer);
 
-                for (NodeAgent nodeAgent : nodeAgentList) {
-                    if (nodeAgent.getClientPort() == request.getNodeAgent().getClientPort()) {
-                        nodeAgent.sendObject(answer);
-                    }
+                    request.getNodeAgent().sendObject(answer);
+
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
             }
         });
     }

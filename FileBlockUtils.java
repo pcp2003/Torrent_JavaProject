@@ -4,13 +4,30 @@ import java.nio.file.Files;
 import java.security.MessageDigest;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 
 public class FileBlockUtils {
 
-    public static FileBlockAnswerMessage readFileBlock(String filePath, long offset, long length) {
+    private static String musicPathByHash (String pathToFolder, int musicHash){
 
-        File file = new File(filePath);
+        for (File file : Objects.requireNonNull(new File(pathToFolder).listFiles())) {
+            if (file.isFile() && file.getName().endsWith("mp3")) {
+                if (musicHash == FileBlockUtils.hashValue(file)){
+                    return (pathToFolder + File.separator + file.getName());
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public static FileBlockAnswerMessage readFileBlock(String pathToFolder, FileBlockRequestMessage fileBlockRequestMessage) {
+
+        File file = new File(Objects.requireNonNull(musicPathByHash(pathToFolder, fileBlockRequestMessage.getHash())));
         System.out.println(file);
+
+        int offset = fileBlockRequestMessage.getOffset();
+        int length = fileBlockRequestMessage.getLength();
 
         int fileHash = hashValue(file);
 
@@ -18,7 +35,7 @@ public class FileBlockUtils {
             throw new IllegalArgumentException("Offset inválido");
         }
         if (length <= 0 || offset + length > file.length()) {
-            length = file.length() - offset;
+            throw new IllegalArgumentException("Lenght inválida");
         }
 
         byte[] data = new byte[(int) length];
@@ -38,14 +55,13 @@ public class FileBlockUtils {
         return new FileBlockAnswerMessage(fileHash, offset, length, data);
     }
 
-    public static void writeMessagesToFile(List<FileBlockAnswerMessage> messages, String outputPath) {
+    public static void writeMessagesToFile(List<FileBlockAnswerMessage> messages, String outputPath, String fileName) {
         if (messages == null || messages.isEmpty()) {
             throw new IllegalArgumentException("Lista de mensagens inválida.");
         }
 
         messages.sort(Comparator.comparingLong(FileBlockAnswerMessage::getOffset));
         int fileHash = messages.getFirst().getHash();
-        String fileName = "file_" + fileHash;
 
         File outputFile = new File(outputPath, fileName);
         try (FileOutputStream fos = new FileOutputStream(outputFile)) {
