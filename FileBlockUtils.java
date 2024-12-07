@@ -61,16 +61,14 @@ public class FileBlockUtils {
         }
 
         messages.sort(Comparator.comparingLong(FileBlockAnswerMessage::getOffset));
-        int fileHash = messages.getFirst().getHash();
 
         File outputFile = new File(outputPath, fileName);
         try (FileOutputStream fos = new FileOutputStream(outputFile)) {
             for (FileBlockAnswerMessage message : messages) {
                 fos.write(message.getData());
             }
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
-        } catch (IOException e) {
+        }catch (IOException e) {
+            System.out.println("Erro ao ler o ficheiro" + e.getMessage());
             throw new RuntimeException(e);
         }
         System.out.println("Ficheiro escrito em: " + outputFile.getAbsolutePath());

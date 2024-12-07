@@ -1,5 +1,4 @@
 import java.util.*;
-import java.util.concurrent.*;
 
 public class DownloadTaskManager extends Thread {
 
@@ -54,6 +53,7 @@ public class DownloadTaskManager extends Thread {
 
     @Override
     public void run() {
+        long initial =  System.currentTimeMillis();
         for(DownloadTaskManagerRequesterThread requesterThread : requesterThreadList) {
             requesterThread.start();
             try {
@@ -63,6 +63,7 @@ public class DownloadTaskManager extends Thread {
             }
         }
         writeOnDisc();
+        System.out.println("It took " + (System.currentTimeMillis() - initial) + "ms to finish download");
     }
 
     public synchronized FileBlockRequestMessage getNextBlockRequest () {
