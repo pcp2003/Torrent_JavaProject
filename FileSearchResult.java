@@ -19,23 +19,11 @@ public class FileSearchResult implements Serializable {
 
     FileSearchResult(WordSearchMessage wordSearchMessage, File file, InetAddress adress, int port) {
         this.wordSearchMessage = wordSearchMessage;
-        hash = hashValue(file);
+        hash = FileBlockUtils.hashValue(file);
         fileSize = file.length();
         fileName = file.getName();
         this.address = adress;
         this.port = port;
-    }
-
-    private int hashValue(File file) {
-        try {
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
-            byte[] fileContent = Files.readAllBytes(file.toPath());
-            byte[] fileDigested = md.digest(fileContent);
-            return new BigInteger(1, fileDigested).intValue();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-
     }
 
     public int getHash() {

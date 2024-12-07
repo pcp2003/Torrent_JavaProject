@@ -4,6 +4,7 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.nio.file.Path;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.concurrent.Executor;
@@ -25,7 +26,6 @@ public class Node {
     private Map<Integer, DownloadTaskManager> downloadTaskManagerMap = new HashMap<>();
     private final int THREADPOOL_NR_OF_THREADS = 5;
 
-
     public Node(IscTorrentGUI gui, int port, String folderName) throws UnknownHostException {
         this.gui = gui;
         this.address = InetAddress.getByName("localhost");
@@ -35,6 +35,7 @@ public class Node {
         this.nodeAgentList = new ArrayList<>();
         startServing();
         this.threadPool = Executors.newFixedThreadPool(THREADPOOL_NR_OF_THREADS);
+        processRequestsAndMakeAnswers();
     }
 
     // Função para um cliente se conectar a um servidor de um nó que não seja servidor de si próprio.
@@ -112,6 +113,20 @@ public class Node {
         return files;
     }
 
+    public String musicPathByHash (int musicHash){
+
+        for (File file : Objects.requireNonNull(new File(pathToFolder).listFiles())) {
+            if (file.isFile() && file.getName().endsWith("mp3")) {
+                if (musicHash == FileBlockUtils.hashValue(file)){
+                    return (pathToFolder + File.separator + file.getName());
+                }
+            }
+        }
+
+        return null;
+    }
+
+
     public int getPort() {
         return port;
     }
@@ -132,7 +147,7 @@ public class Node {
         return results;
     }
 
-    public void requestDownload(List<FileSearchResult> fileSearchResults) {
+    public void download(List<FileSearchResult> fileSearchResults) {
 
         FileSearchResult result = fileSearchResults.getFirst();
         List<NodeAgent> canDownload = new ArrayList<>();
@@ -144,26 +159,27 @@ public class Node {
             }
         }
 
-        DownloadTaskManager newDownloadTaskManager = new DownloadTaskManager(result.getHash(), result.getFileSize(), canDownload);
+        DownloadTaskManager newDownloadTaskManager = new DownloadTaskManager(result.getHash(), result.getFileSize(), canDownload, pathToFolder);
         downloadTaskManagerMap.put(result.getHash(), newDownloadTaskManager);
-        newDownloadTaskManager.sendRequests(); // (1) 2, 3
-
-
+        newDownloadTaskManager.startDownload(); // (1) 2, 3
 
     }
 
-    public synchronized void receiveFileRequest(FileBlockRequestMessage fileBlockRequestMessage, NodeAgent nodeAgent) { // 1,(2),(3)
+
+    public synchronized void receiveFileRequest(FileBlockRequestMessage fileBlockRequestMessage, NodeAgent nodeAgent) {
+        System.out.println( "Received request " + fileBlockRequestMessage + " in node " + port);
         fileBlockRequestMessages.add(new NodeAgentTask<>(fileBlockRequestMessage, nodeAgent));
+        System.out.println( "IsEmpty? " + fileBlockRequestMessages.isEmpty());
         notifyAll();
 
     }
 
-    public synchronized void receiveAnswer (FileBlockAnswerMessage fileBlockAnswerMessage ) { // (1), 2, 3
-
+    public synchronized void receiveAnswer (FileBlockAnswerMessage fileBlockAnswerMessage, NodeAgent nodeAgent ) { // (1), 2, 3
+        downloadTaskManagerMap.get(fileBlockAnswerMessage.getHash()).addFileBlockAnswer(fileBlockAnswerMessage);
     }
 
 
-    public NodeAgentTask<FileBlockRequestMessage> getFileBlockRequestMessage() { // 1, (2), (3)
+    public synchronized NodeAgentTask<FileBlockRequestMessage> getFileBlockRequestMessage() { // 1, (2), (3)
 
         while (fileBlockRequestMessages.isEmpty()) {
             try {
@@ -179,26 +195,26 @@ public class Node {
 
     }
 
-
     // TODO: A threpool deveria usar apenas uma thread por DownloadTaskManagerRequest
+    // Função para processar os requests recebidos e fazer enviar respostas
+    public void processRequestsAndMakeAnswers() { // 1, (2), (3)
 
-    public void processRequestsAndMakeAnswers () { // 1, (2), (3)
-        
         threadPool.submit(() -> {
+            try {
+                NodeAgentTask<FileBlockRequestMessage> request = getFileBlockRequestMessage();
+                System.out.println("Processing: " + request);
 
-            NodeAgentTask<FileBlockRequestMessage> request = getFileBlockRequestMessage();
+                FileBlockAnswerMessage answer = FileBlockUtils.readFileBlock(musicPathByHash(request.getTask().getHash()) , request.getTask().getOffset(), request.getTask().getLength());
+                System.out.println("Sending answer " + answer);
 
-            FileBlockAnswerMessage answer = FileBlockUtils.readFileBlock( pathToFolder, request.getTask().getOffset(), request.getTask().getLength());
-
-            System.out.println("Sending answer " + answer);
-
-            for (NodeAgent nodeAgent : nodeAgentList) {
-                if (nodeAgent.getClientPort() == request.getNodeAgent().getClientPort()) {
-                    nodeAgent.sendObject(answer);
+                for (NodeAgent nodeAgent : nodeAgentList) {
+                    if (nodeAgent.getClientPort() == request.getNodeAgent().getClientPort()) {
+                        nodeAgent.sendObject(answer);
+                    }
                 }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-
-
         });
     }
 

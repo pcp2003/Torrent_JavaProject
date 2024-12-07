@@ -61,8 +61,8 @@ public class IscTorrentGUI extends JFrame {
                     message+=" [" + fileSearchResult.getAddress() + "/" + fileSearchResult.getPort() + "] ";
                 }
                 System.out.println(message);
-                node.requestDownload(searchHashMap.get(selectedHash));
-                startDownload();
+
+                node.download(searchHashMap.get(selectedHash));
             }
         });
 
@@ -82,11 +82,6 @@ public class IscTorrentGUI extends JFrame {
         add(buttonPanel, BorderLayout.EAST);
 
         setVisible(true);
-    }
-
-    private void startDownload() {
-
-        
     }
 
 

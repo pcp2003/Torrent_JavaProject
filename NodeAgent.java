@@ -76,16 +76,17 @@ public class NodeAgent extends Thread {
                         sendObject(node.getMusicByWord(wordSearchMessage));
                     }
                     case NewConnectionRequest request -> {
-                        System.out.println("Request received from client: " + request);
                         clientPort = request.getPort();
                     }
                     case FileBlockRequestMessage fileBlockRequest -> {
 
+                        System.out.println( this.node.getPort() + " sending: " + fileBlockRequest);
                         node.receiveFileRequest(fileBlockRequest, this);
+
                     }
                     case FileBlockAnswerMessage FileBlockAnswerMessage -> {
 
-                        node.receiveAnswer(FileBlockAnswerMessage);
+                        node.receiveAnswer(FileBlockAnswerMessage, this);
                         
                     }
                     case List<?> fileSearchResults -> {

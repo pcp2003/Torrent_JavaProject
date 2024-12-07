@@ -1,6 +1,7 @@
+import java.io.Serializable;
 import java.util.Arrays;
 
-public class FileBlockAnswerMessage {
+public class FileBlockAnswerMessage implements Serializable {
 
     private final int fileHash;
     private final long offset;
@@ -29,7 +30,6 @@ public class FileBlockAnswerMessage {
                 "fileHash=" + fileHash +
                 ", offset=" + offset +
                 ", length=" + length +
-                ", data=" + Arrays.toString(data) +
                 '}';
     }
 
