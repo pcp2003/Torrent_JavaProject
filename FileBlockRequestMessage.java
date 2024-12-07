@@ -1,10 +1,11 @@
+import java.io.Serializable;
 import java.util.Arrays;
 
-public class FileBlockRequestMessage {
+public class FileBlockRequestMessage implements Serializable {
 
-    private int fileHash;
-    private long offset;
-    private long length;
+    private final int fileHash;
+    private final long offset;
+    private final long length;
 
     FileBlockRequestMessage(int fileHash, long offset, long length) {
 
@@ -26,4 +27,11 @@ public class FileBlockRequestMessage {
                 '}';
     }
 
+    public int getHash() {
+        return fileHash;
+    }
+
+    public long getOffset() {
+        return offset;
+    }
 }

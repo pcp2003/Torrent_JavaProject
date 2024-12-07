@@ -1,55 +1,109 @@
 import java.util.*;
+import java.util.concurrent.*;
 
-public class DownloadTaskManager{
+public class DownloadTaskManager {
 
-    private static final int BLOCK_SIZE = 10240;
+    public class DownloadTaskManagerRequesterThread extends Thread {
+        @Override
+        public void run() {
 
-    private final List<FileBlockRequestMessage> fileBlockRequestMessageList = new ArrayList<FileBlockRequestMessage>();
+            int agentIndex = 0;
 
-    private List<NodeAgent> nodeAgentList;
+            while (true){
 
-    DownloadTaskManager(int hashValue, Long fileLenght, List<NodeAgent> nodeAgentList){
+                FileBlockRequestMessage blockRequest = getNextBlockRequest();
 
-        this.nodeAgentList = nodeAgentList;
-        int nFullBlocks = (int) (fileLenght / BLOCK_SIZE);
-        for (int i = 0; i < nFullBlocks; i++) {
-            fileBlockRequestMessageList.add(new FileBlockRequestMessage(hashValue, (long) i * BLOCK_SIZE, BLOCK_SIZE));
-        }
-        long lastOffset = (long) nFullBlocks * BLOCK_SIZE;
-        long rest = fileLenght - lastOffset;
-        if (rest > 0) fileBlockRequestMessageList.add(new FileBlockRequestMessage(hashValue, lastOffset, rest));
-
-    }
-
-    public void sendFileBlocksToAgents () {
-
-        while(!fileBlockRequestMessageList.isEmpty()) {
-            for(NodeAgent nodeAgent: nodeAgentList){
-                FileBlockRequestMessage nextFileBlock = getNextFileBlockRequestMessage();
-                if(nextFileBlock != null){
-                    nodeAgent.sendObject(nextFileBlock);
-                }else{
+                if (blockRequest == null) {
                     break;
                 }
+
+                NodeAgent nodeAgent = nodeAgentList.get(agentIndex);
+
+                System.out.println("DownloadTaskmanagerThread sending: " + blockRequest);
+                nodeAgent.sendObject(blockRequest);
+
+                agentIndex = (agentIndex + 1) % nodeAgentList.size();
+
+                waitForResponse(blockRequest);
+            }
+
+            writeOnDisc();
+        }
+    }
+
+    private static final int BLOCK_SIZE = 10240;
+    private List<FileBlockRequestMessage> fileBlockRequestList = new ArrayList<>();
+    private List<FileBlockAnswerMessage> fileBlockAnswers = new ArrayList<>();
+    private List<NodeAgent> nodeAgentList;
+    private DownloadTaskManagerRequesterThread requesterThread;
+
+    private String filePath;
+
+    public DownloadTaskManager(int hashValue, long fileLength, List<NodeAgent> nodeAgentList, String filePath) {
+        this.nodeAgentList = nodeAgentList;
+        this.filePath = filePath;
+
+        // Divide o arquivo em blocos
+        int nFullBlocks = (int) (fileLength / BLOCK_SIZE);
+        for (int i = 0; i < nFullBlocks; i++) {
+            fileBlockRequestList.add(new FileBlockRequestMessage(hashValue, (long) i * BLOCK_SIZE, BLOCK_SIZE));
+        }
+        long lastOffset = (long) nFullBlocks * BLOCK_SIZE;
+        long rest = fileLength - lastOffset;
+        if (rest > 0) {
+            fileBlockRequestList.add(new FileBlockRequestMessage(hashValue, lastOffset, rest));
+        }
+
+        requesterThread = new DownloadTaskManagerRequesterThread();
+    }
+
+    public void startDownload () {
+        requesterThread.start();
+    }
+
+    public synchronized FileBlockRequestMessage getNextBlockRequest () {
+
+        if (!fileBlockRequestList.isEmpty()) {
+
+            return fileBlockRequestList.removeFirst();
+        }
+        return null;
+    }
+
+    // Aguarda por uma resposta correspondente
+    private synchronized void waitForResponse(FileBlockRequestMessage request)  {
+
+        while (true) {
+
+            // Verifica se a answer recebida corresponde a request enviada!
+            for ( FileBlockAnswerMessage answer : fileBlockAnswers) {
+
+                if (answer.getOffset() == request.getOffset() && answer.getHash() == request.getHash()) {
+
+                    System.out.println("Bloco baixado com sucesso: " + answer);
+                    return;
+                }
+
+            }
+
+            try {
+                wait(); // Aguarda por uma nova resposta
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
             }
         }
     }
 
-    private FileBlockRequestMessage getNextFileBlockRequestMessage() {
-
-        if(fileBlockRequestMessageList.isEmpty()) return null;
-
-        return fileBlockRequestMessageList.removeFirst();
+    //  Adicionar respostas recebidas
+    public synchronized void addFileBlockAnswer(FileBlockAnswerMessage answer) {
+        fileBlockAnswers.add(answer);
+        notifyAll(); // Notifica todas as threads aguardando
     }
 
-    public void startDownload() {
+    public void writeOnDisc () {
 
+        System.out.println("Escrevendo no disco!");
+        FileBlockUtils.writeMessagesToFile(fileBlockAnswers, filePath);
     }
-
-    public List<FileBlockRequestMessage> getFileBlockRequestMessageList() {
-        return fileBlockRequestMessageList;
-    }
-
-
 
 }
