@@ -29,7 +29,7 @@ public class NodeAgent extends Thread {
 
     }
 
-    public <T> void sendObject (T object) {
+    public synchronized <T> void sendObject (T object) {
         try {
             out.writeObject(object);
         } catch (IOException e) {
@@ -112,7 +112,7 @@ public class NodeAgent extends Thread {
 
     @Override
     public String toString() {
-        return "NodeAgent{" + "node=" + node + ", socket=" + socket + '}';
+        return "NodeAgent{" + "myPort=" + node.getPort() + ", clientPort=" + clientPort + '}';
     }
 
 

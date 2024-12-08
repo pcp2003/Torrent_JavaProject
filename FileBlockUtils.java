@@ -2,11 +2,26 @@ import java.io.*;
 import java.math.BigInteger;
 import java.nio.file.Files;
 import java.security.MessageDigest;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 
 public class FileBlockUtils {
+    public static final int BLOCK_SIZE = 10240;
+
+    public static List<FileBlockRequestMessage> createFileBlockRequestList(int hashValue, long fileLength) {
+        List<FileBlockRequestMessage> result = new ArrayList<>();
+        int nFullBlocks = (int) (fileLength / BLOCK_SIZE);
+        for (int i = 0; i < nFullBlocks; i++) {
+            result.add(new FileBlockRequestMessage(hashValue, (long) i * BLOCK_SIZE, BLOCK_SIZE));
+        }
+        int lastOffset = nFullBlocks * BLOCK_SIZE;
+        int rest = (int)(fileLength - lastOffset);
+        if (rest > 0) result.add(new FileBlockRequestMessage(hashValue, lastOffset, rest));
+
+        return result;
+    }
 
     private static String musicPathByHash (String pathToFolder, int musicHash){
 
@@ -26,7 +41,7 @@ public class FileBlockUtils {
         File file = new File(Objects.requireNonNull(musicPathByHash(pathToFolder, fileBlockRequestMessage.getHash())));
         System.out.println(file);
 
-        int offset = fileBlockRequestMessage.getOffset();
+        long offset = fileBlockRequestMessage.getOffset();
         int length = fileBlockRequestMessage.getLength();
 
         int fileHash = hashValue(file);
@@ -55,7 +70,7 @@ public class FileBlockUtils {
         return new FileBlockAnswerMessage(fileHash, offset, length, data);
     }
 
-    public static void writeMessagesToFile(List<FileBlockAnswerMessage> messages, String outputPath, String fileName) {
+    public static void createFile(List<FileBlockAnswerMessage> messages, String outputPath, String fileName) {
         if (messages == null || messages.isEmpty()) {
             throw new IllegalArgumentException("Lista de mensagens inválida.");
         }

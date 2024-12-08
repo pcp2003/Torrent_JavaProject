@@ -1,99 +1,99 @@
+import java.io.File;
 import java.util.*;
 
 public class DownloadTaskManager extends Thread {
-
     public class DownloadTaskManagerRequesterThread extends Thread {
         @Override
         public void run() {
             while (true){
                 try {
                     FileBlockRequestMessage blockRequest = getNextBlockRequest();
-                    if (blockRequest == null) {
-                        break;
-                    }
+                    if (blockRequest == null) break;
                     NodeAgent nodeAgent = getAvailableNodeAgent();
-                    System.out.println("DownloadTaskmanagerThread sending: " + blockRequest);
                     nodeAgent.sendObject(blockRequest);
+
+                    System.out.println("Sending " + blockRequest + " to " + nodeAgent);
                 } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
+                    System.out.println(e.getMessage());
                 }
 
             }
         }
     }
 
-    private static final int BLOCK_SIZE = 10240;
     private final String fileName;
-    private List<FileBlockRequestMessage> fileBlockRequestList = new ArrayList<>();
-    private List<FileBlockAnswerMessage> fileBlockAnswers = new ArrayList<>();
-    private List<NodeAgent> availableNodeAgentList;
-    private List<DownloadTaskManagerRequesterThread> requesterThreadList = new ArrayList<>();
+    private final String filePath;
 
-    private String filePath;
+    private final List<FileBlockRequestMessage> fileBlockRequestList;
+    private final List<FileBlockAnswerMessage> fileBlockAnswers = new ArrayList<>();
+    private final List<NodeAgent> availableNodeAgentList;
 
-    public DownloadTaskManager(int hashValue, long fileLength, List<NodeAgent> nodeAgentList, String filePath, String fileName) {
-        this.availableNodeAgentList = nodeAgentList;
+    private Map<NodeAgent, Integer> nodeAgentAnswersCount = new HashMap<>();
+
+    public DownloadTaskManager(int hashValue, long fileLength, String filePath, String fileName, List<NodeAgent> nodeAgentList) {
         this.filePath = filePath;
         this.fileName = fileName;
-        // Divide o arquivo em blocos
-        int nFullBlocks = (int) (fileLength / BLOCK_SIZE);
-        for (int i = 0; i < nFullBlocks; i++) {
-            fileBlockRequestList.add(new FileBlockRequestMessage(hashValue, i * BLOCK_SIZE, BLOCK_SIZE));
-        }
-        int lastOffset = nFullBlocks * BLOCK_SIZE;
-        int rest = (int)(fileLength - lastOffset);
-        if (rest > 0) {
-            fileBlockRequestList.add(new FileBlockRequestMessage(hashValue, lastOffset, rest));
-        }
+        this.availableNodeAgentList = nodeAgentList;
 
-        for(int i = 0; i<availableNodeAgentList.size(); i++) {
-            requesterThreadList.add(new DownloadTaskManagerRequesterThread());
-        }
+        this.fileBlockRequestList = FileBlockUtils.createFileBlockRequestList(hashValue, fileLength);
     }
 
     @Override
     public void run() {
-        long initial =  System.currentTimeMillis();
-        for(DownloadTaskManagerRequesterThread requesterThread : requesterThreadList) {
-            requesterThread.start();
-            try {
-                requesterThread.join();
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
+        long initial = System.currentTimeMillis();
+        List<DownloadTaskManagerRequesterThread> threads = new ArrayList<>();
+
+        try {
+            for (NodeAgent _: availableNodeAgentList) {
+                DownloadTaskManagerRequesterThread requesterThread = new DownloadTaskManagerRequesterThread();
+                threads.add(requesterThread);
+                requesterThread.start();
             }
+            for (DownloadTaskManagerRequesterThread thread : threads) {
+                thread.join();
+            }
+        } catch (InterruptedException e) {
+            System.out.println("Uma das threads do DownloadTaskManager foi interrompida...");
         }
-        writeOnDisc();
+
+    // Esperar todas as threads acabarem de enviar os pedidos
+        reconstructFile();
         System.out.println("It took " + (System.currentTimeMillis() - initial) + "ms to finish download");
+        for(NodeAgent nodeAgent : nodeAgentAnswersCount.keySet().stream().toList()){
+            System.out.println(nodeAgent + " sent " + nodeAgentAnswersCount.get(nodeAgent) + " file blocks");
+        }
     }
 
     public synchronized FileBlockRequestMessage getNextBlockRequest () {
+        if (fileBlockRequestList.isEmpty()) return null;
 
-        if (!fileBlockRequestList.isEmpty()) {
+        FileBlockRequestMessage fileBlockRequestMessage = fileBlockRequestList.removeFirst();
+        notifyAll();
+        return fileBlockRequestMessage;
 
-            return fileBlockRequestList.removeFirst();
-        }
-        return null;
     }
 
     // Aguarda por uma resposta correspondente
     private synchronized NodeAgent getAvailableNodeAgent() throws InterruptedException {
-        while(availableNodeAgentList.isEmpty()) {wait();}
-        NodeAgent nextNodeAgent = availableNodeAgentList.removeFirst();
+        while(availableNodeAgentList.isEmpty()) wait();
+
+        NodeAgent nodeAgent = availableNodeAgentList.removeFirst();
         notifyAll();
-        return nextNodeAgent;
+        return nodeAgent;
     }
 
     //  Adicionar respostas recebidas
     public synchronized void addFileBlockAnswer(FileBlockAnswerMessage answer, NodeAgent nodeAgent) {
         fileBlockAnswers.add(answer);
         availableNodeAgentList.add(nodeAgent);
-        notifyAll(); // Notifica todas as threads aguardando
+        nodeAgentAnswersCount.put(nodeAgent, nodeAgentAnswersCount.getOrDefault(nodeAgent, 0) + 1);
+        notifyAll();
     }
 
-    public void writeOnDisc () {
+    public void reconstructFile() {
+        System.out.println("File saved in " + filePath + File.separator + fileName);
 
-        System.out.println("Escrevendo no disco!");
-        FileBlockUtils.writeMessagesToFile(fileBlockAnswers, filePath, fileName);
+        FileBlockUtils.createFile(fileBlockAnswers, filePath, fileName);
     }
 
 }

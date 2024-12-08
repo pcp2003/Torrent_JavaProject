@@ -146,7 +146,7 @@ public class Node {
             }
         }
 
-        DownloadTaskManager newDownloadTaskManager = new DownloadTaskManager(result.getHash(), result.getFileSize(), canDownload, pathToFolder, result.getFileName());
+        DownloadTaskManager newDownloadTaskManager = new DownloadTaskManager(result.getHash(), result.getFileSize(), pathToFolder, result.getFileName(), canDownload);
         downloadTaskManagerMap.put(result.getHash(), newDownloadTaskManager);
         newDownloadTaskManager.start(); // (1) 2, 3
 
