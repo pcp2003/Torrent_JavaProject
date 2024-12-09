@@ -1,9 +1,5 @@
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.io.File;
-import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.*;
@@ -11,15 +7,12 @@ import java.util.List;
 
 public class IscTorrentGUI extends JFrame {
 
-    private JTextField searchField;
-    private JButton searchButton;
-    private JList<String> resultsList;
-    private JButton downloadButton;
-    private JButton connectButton;
-    private Node node;
+    private final JTextField searchField;
+    private final JList<String> resultsList;
+    private final Node node;
     private Map<Integer, List<FileSearchResult>> searchHashMap = new HashMap<>();
 
-    public IscTorrentGUI(int id) throws UnknownHostException {
+    public IscTorrentGUI(int id) {
         this.node = new Node(this,8080 + id, "dl" + id);
         setTitle("IscTorrent " +  "localhost" + ":" + node.getPort());
         setSize(400, 300);
@@ -29,7 +22,7 @@ public class IscTorrentGUI extends JFrame {
         JPanel searchPanel = new JPanel(new BorderLayout());
         JLabel searchLabel = new JLabel("Texto a procurar:");
         searchField = new JTextField(15);
-        searchButton = new JButton("Procurar");
+        JButton searchButton = new JButton("Procurar");
         searchPanel.add(searchLabel, BorderLayout.WEST);
         searchPanel.add(searchField, BorderLayout.CENTER);
         searchPanel.add(searchButton, BorderLayout.EAST);
@@ -38,41 +31,32 @@ public class IscTorrentGUI extends JFrame {
         JScrollPane resultsScrollPane = new JScrollPane(resultsList);
 
         JPanel buttonPanel = new JPanel(new GridLayout(2, 1, 5, 5));
-        downloadButton = new JButton("Descarregar");
+        JButton downloadButton = new JButton("Descarregar");
 
-        searchButton.addActionListener(new ActionListener() {
+        searchButton.addActionListener(_ -> {
 
-            public void actionPerformed(ActionEvent e) {
+            String wordToSearch = searchField.getText();
 
-                String wordToSearch = searchField.getText();
+            node.searchMusic(wordToSearch);
 
-                node.searchMusic(wordToSearch);
-
-            }
         });
 
-        downloadButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
+        downloadButton.addActionListener(_ -> {
 
 
-                Integer selectedHash = searchHashMap.keySet().stream().toList().get(resultsList.getSelectedIndex());
-                String message = "A fazer download de " + searchHashMap.get(selectedHash).getFirst().getFileName() + " através de " +  searchHashMap.get(selectedHash).size() + " nós";
-                for(FileSearchResult fileSearchResult : searchHashMap.get(selectedHash)){
-                    message+=" [" + fileSearchResult.getAddress() + "/" + fileSearchResult.getPort() + "] ";
-                }
-                System.out.println(message);
-
-                node.download(searchHashMap.get(selectedHash));
+            Integer selectedHash = searchHashMap.keySet().stream().toList().get(resultsList.getSelectedIndex());
+            StringBuilder message = new StringBuilder("A fazer download de " + searchHashMap.get(selectedHash).getFirst().getFileName() + " através de " + searchHashMap.get(selectedHash).size() + " nós");
+            for(FileSearchResult fileSearchResult : searchHashMap.get(selectedHash)){
+                message.append(" [").append(fileSearchResult.getAddress()).append("/").append(fileSearchResult.getPort()).append("] ");
             }
+            System.out.println(message);
+
+            node.download(searchHashMap.get(selectedHash));
         });
 
-        connectButton = new JButton("Ligar a Nó");
+        JButton connectButton = new JButton("Ligar a Nó");
 
-        connectButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                openConnectionDialog();
-            }
-        });
+        connectButton.addActionListener(_ -> openConnectionDialog());
 
         buttonPanel.add(downloadButton);
         buttonPanel.add(connectButton);
@@ -83,8 +67,6 @@ public class IscTorrentGUI extends JFrame {
 
         setVisible(true);
     }
-
-
 
     private void openConnectionDialog() {
         JDialog connectionDialog = new JDialog(this, "Conectar a Nó", true);
@@ -98,29 +80,23 @@ public class IscTorrentGUI extends JFrame {
         JButton okButton = new JButton("OK");
         JButton cancelButton = new JButton("Cancelar");
 
-        okButton.addActionListener(new ActionListener() {
+        okButton.addActionListener(_ -> {
 
-            public void actionPerformed(ActionEvent e) {
+            InetAddress addr;
 
-                InetAddress addr = null;
-                try {
-                    addr = InetAddress.getByName(addressField.getText());
-                } catch (UnknownHostException ex) {
-                    throw new RuntimeException(ex);
-                }
-                int port = Integer.parseInt(portField.getText());
-
-                node.connectClient( addr, port, node.getConnectionRequest());
-
-                connectionDialog.dispose();
+            try {
+                addr = InetAddress.getByName(addressField.getText());
+            } catch (UnknownHostException ex) {
+                throw new RuntimeException(ex);
             }
+            int port = Integer.parseInt(portField.getText());
+
+            node.connectClient( addr, port, node.getConnectionRequest());
+
+            connectionDialog.dispose();
         });
 
-        cancelButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                connectionDialog.dispose();
-            }
-        });
+        cancelButton.addActionListener(_ -> connectionDialog.dispose());
 
 
         connectionDialog.add(addressLabel);

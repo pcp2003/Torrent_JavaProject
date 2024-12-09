@@ -1,9 +1,6 @@
 import java.io.File;
 import java.io.Serializable;
-import java.math.BigInteger;
-import java.nio.file.Files;
 import java.net.InetAddress;
-import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -19,7 +16,7 @@ public class FileSearchResult implements Serializable {
 
     FileSearchResult(WordSearchMessage wordSearchMessage, File file, InetAddress adress, int port) {
         this.wordSearchMessage = wordSearchMessage;
-        hash = FileBlockUtils.hashValue(file);
+        hash = FileUtils.hashValue(file);
         fileSize = file.length();
         fileName = file.getName();
         this.address = adress;

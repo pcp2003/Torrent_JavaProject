@@ -1,5 +1,6 @@
 import java.io.*;
 import java.math.BigInteger;
+import java.net.InetAddress;
 import java.nio.file.Files;
 import java.security.MessageDigest;
 import java.util.ArrayList;
@@ -7,7 +8,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 
-public class FileBlockUtils {
+public class FileUtils {
     public static final int BLOCK_SIZE = 10240;
 
     public static List<FileBlockRequestMessage> createFileBlockRequestList(int hashValue, long fileLength) {
@@ -27,7 +28,7 @@ public class FileBlockUtils {
 
         for (File file : Objects.requireNonNull(new File(pathToFolder).listFiles())) {
             if (file.isFile() && file.getName().endsWith("mp3")) {
-                if (musicHash == FileBlockUtils.hashValue(file)){
+                if (musicHash == FileUtils.hashValue(file)){
                     return (pathToFolder + File.separator + file.getName());
                 }
             }
@@ -39,7 +40,6 @@ public class FileBlockUtils {
     public static FileBlockAnswerMessage readFileBlock(String pathToFolder, FileBlockRequestMessage fileBlockRequestMessage) {
 
         File file = new File(Objects.requireNonNull(musicPathByHash(pathToFolder, fileBlockRequestMessage.getHash())));
-        System.out.println(file);
 
         long offset = fileBlockRequestMessage.getOffset();
         int length = fileBlockRequestMessage.getLength();
@@ -61,8 +61,6 @@ public class FileBlockUtils {
             if (bytesRead != length) {
                 throw new IOException("Erro ao ler o ficheiro");
             }
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -99,6 +97,28 @@ public class FileBlockUtils {
             throw new RuntimeException(e);
         }
 
+    }
+
+    public static List<File> getFilesList( String pathToFolder) {
+        List<File> files = new ArrayList<>();
+        for (File file : Objects.requireNonNull(new File(pathToFolder).listFiles())) {
+            if (file.isFile() && file.getName().endsWith("mp3")) {
+                files.add(file);
+            }
+        }
+        return files;
+    }
+
+    public static List<FileSearchResult> getMusicsByWord(InetAddress address, int port, String pathToFolder, WordSearchMessage wordSearchMessage) {
+        String word = wordSearchMessage.getWord();
+        List<File> files = FileUtils.getFilesList(pathToFolder);
+        List<FileSearchResult> results = new ArrayList<>();
+        for (File file : files) {
+            if (file.getName().toLowerCase().contains(word.toLowerCase())) {
+                results.add(new FileSearchResult(wordSearchMessage, file, address, port));
+            }
+        }
+        return results;
     }
 }
 

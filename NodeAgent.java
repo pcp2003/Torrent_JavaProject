@@ -4,10 +4,10 @@ import java.util.List;
 
 public class NodeAgent extends Thread {
 
-    private Node node;
+    private final Node node;
     private ObjectInputStream in;
     private ObjectOutputStream out;
-    private Socket socket;
+    private final Socket socket;
     private int clientPort;
 
 
@@ -18,10 +18,6 @@ public class NodeAgent extends Thread {
         doConnections();
     }
 
-    public Socket getSocket() {
-        return socket;
-    }
-
     @Override
     public void run() {
 
@@ -29,7 +25,7 @@ public class NodeAgent extends Thread {
 
     }
 
-    public synchronized <T> void sendObject (T object) {
+    public synchronized <T> void sendObject(T object) {
         try {
             out.writeObject(object);
         } catch (IOException e) {
@@ -68,33 +64,33 @@ public class NodeAgent extends Thread {
     private void serve() {
         System.out.println("Agente iniciado e ouvindo no socket: " + socket);
         try {
+
             while (true) {
+
                 Object obj = in.readObject();
                 switch (obj) {
-                    case WordSearchMessage wordSearchMessage ->{
+                    case WordSearchMessage wordSearchMessage -> {
                         System.out.println("Solicitação de lista de musicas com " + wordSearchMessage);
-                        sendObject(node.getMusicByWord(wordSearchMessage));
+                        sendObject(FileUtils.getMusicsByWord(node.getAddress(), node.getPort(), node.getPathToFolder(), wordSearchMessage));
                     }
-                    case NewConnectionRequest request -> {
-                        clientPort = request.getPort();
-                    }
+                    case NewConnectionRequest request -> clientPort = request.getPort();
+
                     case FileBlockRequestMessage fileBlockRequest -> {
 
-                        System.out.println( this.node.getPort() + " sending: " + fileBlockRequest);
+                        System.out.println(this.node.getPort() + " sending: " + fileBlockRequest);
                         node.receiveFileRequest(fileBlockRequest, this);
 
                     }
-                    case FileBlockAnswerMessage FileBlockAnswerMessage -> {
+                    case FileBlockAnswerMessage FileBlockAnswerMessage -> node.receiveAnswer(FileBlockAnswerMessage, this);
 
-                        node.receiveAnswer(FileBlockAnswerMessage, this);
-                        
-                    }
                     case List<?> fileSearchResults -> {
 
-                        if(fileSearchResults.stream().allMatch(x -> x instanceof FileSearchResult)) {
-
-                            node.receiveMusicSearchResult((List<FileSearchResult>) fileSearchResults);
-
+                        if (fileSearchResults.stream().allMatch(x -> x instanceof FileSearchResult)) {
+                            @SuppressWarnings("unchecked") // Supressão localizada
+                            List<FileSearchResult> results = (List<FileSearchResult>) fileSearchResults;
+                            node.receiveMusicSearchResult(results);
+                        } else {
+                            System.err.println("Lista contém elementos incompatíveis.");
                         }
                     }
                     default -> System.out.println("Tipo desconhecido: " + obj);
@@ -102,7 +98,6 @@ public class NodeAgent extends Thread {
             }
         } catch (ClassNotFoundException | IOException e) {
             System.err.println("Conexão encerrada ou erro: " + e.getMessage());
-            e.printStackTrace();
         }
     }
 
