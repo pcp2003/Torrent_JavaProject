@@ -6,14 +6,15 @@ public class DownloadTaskManager extends Thread {
         @Override
         public void run() {
             while (true){
-
-                FileBlockRequestMessage blockRequest = getNextBlockRequest();
-                if (blockRequest == null) break;
-                NodeAgent nodeAgent = getAvailableNodeAgent();
-                nodeAgent.sendObject(blockRequest);
-                System.out.println("Sending " + blockRequest + " to " + nodeAgent);
-
-
+                try {
+                    FileBlockRequestMessage blockRequest = getNextBlockRequest();
+                    if (blockRequest == null) break;
+                    NodeAgent nodeAgent = getAvailableNodeAgent();
+                    nodeAgent.sendObject(blockRequest);
+                    System.out.println("Sending " + blockRequest + " to " + nodeAgent);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
             }
         }
     }
@@ -38,22 +39,18 @@ public class DownloadTaskManager extends Thread {
     public void run() {
 
         long initial = System.currentTimeMillis();
-        List<DownloadTaskManagerRequesterThread> threads = new ArrayList<>();
-
-        try {
-            for (NodeAgent _ : availableNodeAgentList) {
-                DownloadTaskManagerRequesterThread requesterThread = new DownloadTaskManagerRequesterThread();
-                threads.add(requesterThread);
-                requesterThread.start();
-            }
-            for (DownloadTaskManagerRequesterThread thread : threads) {
-                thread.join();
-            }
-        } catch (InterruptedException e) {
-            System.out.println("Uma das threads do DownloadTaskManager foi interrompida...");
+        for (NodeAgent _ : availableNodeAgentList) {
+            DownloadTaskManagerRequesterThread requesterThread = new DownloadTaskManagerRequesterThread();
+            requesterThread.start();
         }
 
-    // Esperar todas as threads acabarem de enviar os pedidos
+        //esperar todas as answers chegarem
+        try {
+            wait(3000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
         reconstructFile();
         System.out.println("It took " + (System.currentTimeMillis() - initial) + "ms to finish download");
         for(NodeAgent nodeAgent : nodeAgentAnswersCount.keySet().stream().toList()){
@@ -71,15 +68,8 @@ public class DownloadTaskManager extends Thread {
     }
 
     // Aguarda por uma resposta correspondente
-    private synchronized NodeAgent getAvailableNodeAgent() {
-        while(availableNodeAgentList.isEmpty()) {
-            try {
-                wait();
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
+    private synchronized NodeAgent getAvailableNodeAgent() throws InterruptedException {
+        while(availableNodeAgentList.isEmpty()) wait();
         NodeAgent nodeAgent = availableNodeAgentList.removeFirst();
         notifyAll();
         return nodeAgent;
@@ -90,10 +80,11 @@ public class DownloadTaskManager extends Thread {
         fileBlockAnswers.add(answer);
         availableNodeAgentList.add(nodeAgent);
         nodeAgentAnswersCount.put(nodeAgent, nodeAgentAnswersCount.getOrDefault(nodeAgent, 0) + 1);
+        System.out.println();
         notifyAll();
     }
 
-    public void reconstructFile() {
+    public synchronized void reconstructFile() {
         System.out.println("File saved in " + filePath + File.separator + fileName);
 
         FileUtils.createFile(fileBlockAnswers, filePath, fileName);
