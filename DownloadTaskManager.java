@@ -3,7 +3,7 @@ import java.util.*;
 
 public class DownloadTaskManager extends Thread {
 
-    //Thread que trata de enviar pedidos
+    //Thread que pede a cada NodeAgent para enviar FileBlockRequestMessage
     public class DownloadTaskManagerRequesterThread extends Thread {
         @Override
         public void run() {
@@ -31,9 +31,6 @@ public class DownloadTaskManager extends Thread {
     private final List<FileBlockAnswerMessage> fileBlockAnswers = new ArrayList<>();
     private final List<NodeAgent> availableNodeAgentList;
     private final Map<NodeAgent, Integer> nodeAgentAnswersCount = new HashMap<>();
-
-
-
 
     public DownloadTaskManager(int hashValue, long fileLength, String filePath, String fileName, List<NodeAgent> nodeAgentList, IscTorrentGUI gui) {
         this.hashValue = hashValue;
@@ -66,6 +63,8 @@ public class DownloadTaskManager extends Thread {
 
     }
 
+    //Devolve e retira o primeiro FileBlockRequestMessage da lista fileBlockRequestList
+    //Usado pela DownloadTaskManagerRequesterThread
     public synchronized FileBlockRequestMessage getNextBlockRequest () {
         if (fileBlockRequestList.isEmpty()) return null;
 
@@ -75,7 +74,8 @@ public class DownloadTaskManager extends Thread {
 
     }
 
-    // Aguarda por uma resposta correspondente
+    //Devolve e retira o primeiro NodeAgent da lista availableNodeAgentList
+    //Usado pela DownloadTaskManagerRequesterThread
     private synchronized NodeAgent getAvailableNodeAgent() throws InterruptedException {
         while(availableNodeAgentList.isEmpty()) wait();
         NodeAgent nodeAgent = availableNodeAgentList.removeFirst();
@@ -83,7 +83,9 @@ public class DownloadTaskManager extends Thread {
         return nodeAgent;
     }
 
-    //  Adicionar respostas recebidas
+    //Recebe um FileBlockAnswerMessage e o NodeAgent que o enviou
+    //Adiciona o FileBlockAnswerMessage à lista fileBlockAnswers, diminui o countDownLatch, coloca o NodeAgent na lista availableNodeAgentList
+    //Contabiliza o FileBlockAnswerMessage recebido pelo NodeAgent no HashMap nodeAgentAnswersCount
     public synchronized void addFileBlockAnswer(FileBlockAnswerMessage answer, NodeAgent nodeAgent) {
         fileBlockAnswers.add(answer);
         countDownLatch.countDown();
@@ -92,9 +94,8 @@ public class DownloadTaskManager extends Thread {
         notifyAll();
     }
 
+    //Chama a função createFile() do FileUtils
     public synchronized void reconstructFile() {
-        System.out.println("File saved in " + filePath + File.separator + fileName);
-
         FileUtils.createFile(fileBlockAnswers, filePath, fileName);
     }
 

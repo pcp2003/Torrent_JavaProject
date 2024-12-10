@@ -61,7 +61,7 @@ public class NodeAgent extends Thread {
                 switch (obj) {
                     case WordSearchMessage wordSearchMessage -> {
                         System.out.println("Solicitação de lista de musicas com " + wordSearchMessage);
-                        sendObject(FileUtils.getMusicsByWord(node.getAddress(), node.getPort(), node.getPathToFolder(), wordSearchMessage));
+                        sendObject(FileUtils.getFilesByWord(node.getAddress(), node.getPort(), node.getPathToFolder(), wordSearchMessage));
                     }
                     case NewConnectionRequest request -> clientPort = request.getPort();
 

@@ -16,10 +16,6 @@ public class FileBlockAnswerMessage implements Serializable {
         this.data = data;
     }
 
-    public long getLength() {
-        return length;
-    }
-
     public byte [] getData() {
         return data;
     }
