@@ -2,6 +2,7 @@ import java.io.File;
 import java.util.*;
 
 public class DownloadTaskManager extends Thread {
+
     public class DownloadTaskManagerRequesterThread extends Thread {
         @Override
         public void run() {
@@ -19,20 +20,28 @@ public class DownloadTaskManager extends Thread {
         }
     }
 
+    private final int hashValue;
     private final String fileName;
     private final String filePath;
+    private final CountDownLatch countDownLatch;
+    private final IscTorrentGUI gui;
 
     private final List<FileBlockRequestMessage> fileBlockRequestList;
     private final List<FileBlockAnswerMessage> fileBlockAnswers = new ArrayList<>();
     private final List<NodeAgent> availableNodeAgentList;
     private final Map<NodeAgent, Integer> nodeAgentAnswersCount = new HashMap<>();
 
-    public DownloadTaskManager(int hashValue, long fileLength, String filePath, String fileName, List<NodeAgent> nodeAgentList) {
+
+
+
+    public DownloadTaskManager(int hashValue, long fileLength, String filePath, String fileName, List<NodeAgent> nodeAgentList, IscTorrentGUI gui) {
+        this.hashValue = hashValue;
+        this.gui = gui;
         this.filePath = filePath;
         this.fileName = fileName;
         this.availableNodeAgentList = nodeAgentList;
-
         this.fileBlockRequestList = FileUtils.createFileBlockRequestList(hashValue, fileLength);
+        this.countDownLatch = new CountDownLatch(fileBlockRequestList.size());
     }
 
     @Override
@@ -44,18 +53,16 @@ public class DownloadTaskManager extends Thread {
             requesterThread.start();
         }
 
-        //esperar todas as answers chegarem
         try {
-            wait(3000);
+            countDownLatch.await();
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
 
         reconstructFile();
-        System.out.println("It took " + (System.currentTimeMillis() - initial) + "ms to finish download");
-        for(NodeAgent nodeAgent : nodeAgentAnswersCount.keySet().stream().toList()){
-            System.out.println(nodeAgent + " sent " + nodeAgentAnswersCount.get(nodeAgent) + " file blocks");
-        }
+
+        gui.displayDownloadInfo(hashValue, (System.currentTimeMillis() - initial), nodeAgentAnswersCount);
+
     }
 
     public synchronized FileBlockRequestMessage getNextBlockRequest () {
@@ -69,6 +76,7 @@ public class DownloadTaskManager extends Thread {
 
     // Aguarda por uma resposta correspondente
     private synchronized NodeAgent getAvailableNodeAgent() throws InterruptedException {
+
         while(availableNodeAgentList.isEmpty()) wait();
         NodeAgent nodeAgent = availableNodeAgentList.removeFirst();
         notifyAll();
@@ -78,6 +86,7 @@ public class DownloadTaskManager extends Thread {
     //  Adicionar respostas recebidas
     public synchronized void addFileBlockAnswer(FileBlockAnswerMessage answer, NodeAgent nodeAgent) {
         fileBlockAnswers.add(answer);
+        countDownLatch.countDown();
         availableNodeAgentList.add(nodeAgent);
         nodeAgentAnswersCount.put(nodeAgent, nodeAgentAnswersCount.getOrDefault(nodeAgent, 0) + 1);
         System.out.println();

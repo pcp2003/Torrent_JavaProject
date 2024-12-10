@@ -43,15 +43,12 @@ public class IscTorrentGUI extends JFrame {
 
         downloadButton.addActionListener(_ -> {
 
+            if (!resultsList.isSelectionEmpty()) {
+                int selectedHash = searchHashMap.keySet().stream().toList().get(resultsList.getSelectedIndex());
 
-            Integer selectedHash = searchHashMap.keySet().stream().toList().get(resultsList.getSelectedIndex());
-            StringBuilder message = new StringBuilder("A fazer download de " + searchHashMap.get(selectedHash).getFirst().getFileName() + " através de " + searchHashMap.get(selectedHash).size() + " nós");
-            for(FileSearchResult fileSearchResult : searchHashMap.get(selectedHash)){
-                message.append(" [").append(fileSearchResult.getAddress()).append("/").append(fileSearchResult.getPort()).append("] ");
+                node.download(searchHashMap.get(selectedHash));
             }
-            System.out.println(message);
 
-            node.download(searchHashMap.get(selectedHash));
         });
 
         JButton connectButton = new JButton("Ligar a Nó");
@@ -66,6 +63,39 @@ public class IscTorrentGUI extends JFrame {
         add(buttonPanel, BorderLayout.EAST);
 
         setVisible(true);
+    }
+
+    public void displayDownloadInfo (int selectedHash, long time, Map<NodeAgent, Integer> nodeAgentAnswersCount) {
+
+        StringBuilder message = new StringBuilder("Descarga completa.\n");
+
+        for (FileSearchResult fileSearchResult : searchHashMap.get(selectedHash)) {
+
+            NodeAgent matchingNode = nodeAgentAnswersCount.keySet().stream()
+                    .filter(nodeAgent -> nodeAgent.getClientPort() == fileSearchResult.getPort())
+                    .findFirst()
+                    .orElse(null);
+
+            int answersCount = nodeAgentAnswersCount.get(matchingNode);
+
+            message.append("Fornecedor [endereco=")
+                    .append(fileSearchResult.getAddress())
+                    .append(", porta=")
+                    .append(fileSearchResult.getPort())
+                    .append("]:")
+                    .append(answersCount)
+                    .append("\n");
+        }
+
+        message.append("Tempo decorrido: ").append(time).append("ms");
+
+        JOptionPane.showMessageDialog(
+                this,
+                message.toString(),
+                "Informação",
+                JOptionPane.INFORMATION_MESSAGE
+        );
+
     }
 
     private void openConnectionDialog() {

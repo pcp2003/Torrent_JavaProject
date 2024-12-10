@@ -10,7 +10,6 @@ public class NodeAgent extends Thread {
     private final Socket socket;
     private int clientPort;
 
-
     public NodeAgent(Node node, Socket socket) {
         this.node = node;
         this.socket = socket;
@@ -111,4 +110,7 @@ public class NodeAgent extends Thread {
     }
 
 
+    public Node getNode() {
+        return node;
+    }
 }

@@ -17,7 +17,6 @@ public class Node {
     private final String pathToFolder;
     private final IscTorrentGUI gui;
     private final ExecutorService threadPool;
-
     private final List<NodeAgent> nodeAgentList = new ArrayList<>();
     private final List<FileSearchResult> musicSearchResult = new ArrayList<>();
     private final List<NodeAgentTask<FileBlockRequestMessage>> fileBlockRequestMessages = new ArrayList<>();
@@ -111,7 +110,7 @@ public class Node {
             }
         }
 
-        DownloadTaskManager newDownloadTaskManager = new DownloadTaskManager(result.getHash(), result.getFileSize(), pathToFolder, result.getFileName(), canDownload);
+        DownloadTaskManager newDownloadTaskManager = new DownloadTaskManager(result.getHash(), result.getFileSize(), pathToFolder, result.getFileName(), canDownload, gui);
         downloadTaskManagerMap.put(result.getHash(), newDownloadTaskManager);
         newDownloadTaskManager.start(); // (1) 2, 3
 
