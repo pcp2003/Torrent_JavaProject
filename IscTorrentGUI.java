@@ -94,7 +94,7 @@ public class IscTorrentGUI extends JFrame {
         JOptionPane.showMessageDialog(
                 this,
                 message.toString(),
-                "Informação",
+                "Download Info",
                 JOptionPane.INFORMATION_MESSAGE
         );
 
