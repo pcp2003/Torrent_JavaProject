@@ -13,6 +13,7 @@ public class IscTorrentGUI extends JFrame {
     private Map<Integer, List<FileSearchResult>> searchHashMap = new HashMap<>();
 
     public IscTorrentGUI(int id) {
+        
         this.node = new Node(this,8080 + id, "dl" + id);
         setTitle("IscTorrent " +  "localhost" + ":" + node.getPort());
         setSize(400, 300);
@@ -33,6 +34,7 @@ public class IscTorrentGUI extends JFrame {
         JPanel buttonPanel = new JPanel(new GridLayout(2, 1, 5, 5));
         JButton downloadButton = new JButton("Descarregar");
 
+        // Ação a realizar pressionar searchButton
         searchButton.addActionListener(_ -> {
 
             String wordToSearch = searchField.getText();
@@ -41,6 +43,7 @@ public class IscTorrentGUI extends JFrame {
 
         });
 
+        // Ação a realizar pressionar downloadButton
         downloadButton.addActionListener(_ -> {
 
             if (!resultsList.isSelectionEmpty()) {
@@ -67,6 +70,7 @@ public class IscTorrentGUI extends JFrame {
         setVisible(true);
     }
 
+    // Função para realizar o display das informações finais num OptionPane.
     public void displayDownloadInfo (int selectedHash, long time, Map<NodeAgent, Integer> nodeAgentAnswersCount) {
 
         StringBuilder message = new StringBuilder("Descarga completa.\n");
@@ -100,6 +104,7 @@ public class IscTorrentGUI extends JFrame {
 
     }
 
+    // Função para abrir a connectionPane para adicionar as informações para se conectar a outro nó.
     private void openConnectionDialog() {
         JDialog connectionDialog = new JDialog(this, "Conectar a Nó", true);
         connectionDialog.setSize(500, 120);
@@ -141,6 +146,7 @@ public class IscTorrentGUI extends JFrame {
         connectionDialog.setVisible(true);
     }
 
+    // Função para atualizar a resultList chamada dentro do nó.
     public void updateMusicResultList(List<FileSearchResult> musicSearchResult) {
         // Atualizando o modelo da lista
         DefaultListModel<String> model = new DefaultListModel<>();

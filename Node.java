@@ -119,7 +119,7 @@ public class Node {
 
     }
 
-    // Função para receber FileRequests de outros nós a partir 
+    // Função para receber FileBlockRequests de outros nós a partir de um mensagem enviada pelo NodeAgent
     public synchronized void receiveFileRequest(FileBlockRequestMessage fileBlockRequestMessage, NodeAgent nodeAgent) {
         System.out.println("Received request " + fileBlockRequestMessage + " in node " + port);
         fileBlockRequestMessages.add(new NodeAgentTask<>(fileBlockRequestMessage, nodeAgent));
@@ -127,12 +127,13 @@ public class Node {
 
     }
 
-    public synchronized void receiveAnswer(FileBlockAnswerMessage fileBlockAnswerMessage, NodeAgent nodeAgent) { // (1), 2, 3
+    // Função para receber FileBlockAnswers de outros nós a partir de um mensagem enviada pelo NodeAgent
+    public synchronized void receiveAnswer(FileBlockAnswerMessage fileBlockAnswerMessage, NodeAgent nodeAgent) {
         downloadTaskManagerMap.get(fileBlockAnswerMessage.getHash()).addFileBlockAnswer(fileBlockAnswerMessage, nodeAgent);
     }
 
-
-    public synchronized NodeAgentTask<FileBlockRequestMessage> getFileBlockRequestMessage() { // 1, (2), (3)
+    // Função para buscar o proximo request que tem que ser processado da lista de requests
+    public synchronized NodeAgentTask<FileBlockRequestMessage> getFileBlockRequestMessage() {
 
         while (fileBlockRequestMessages.isEmpty()) {
             try {
@@ -149,8 +150,7 @@ public class Node {
     }
 
     // Função para processar os requests recebidos e fazer enviar respostas
-
-    public void processRequestsAndMakeAnswers() { // 1, (2), (3)
+    public void processRequestsAndMakeAnswers() {
 
         threadPool.submit(() -> {
 
