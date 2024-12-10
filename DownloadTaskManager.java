@@ -89,7 +89,6 @@ public class DownloadTaskManager extends Thread {
         countDownLatch.countDown();
         availableNodeAgentList.add(nodeAgent);
         nodeAgentAnswersCount.put(nodeAgent, nodeAgentAnswersCount.getOrDefault(nodeAgent, 0) + 1);
-        System.out.println();
         notifyAll();
     }
 

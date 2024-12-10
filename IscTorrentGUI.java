@@ -44,9 +44,11 @@ public class IscTorrentGUI extends JFrame {
         downloadButton.addActionListener(_ -> {
 
             if (!resultsList.isSelectionEmpty()) {
-                int selectedHash = searchHashMap.keySet().stream().toList().get(resultsList.getSelectedIndex());
+                for(int i: resultsList.getSelectedIndices()){
+                    int selectedHash = searchHashMap.keySet().stream().toList().get(i);
+                    node.download(searchHashMap.get(selectedHash));
+                }
 
-                node.download(searchHashMap.get(selectedHash));
             }
 
         });

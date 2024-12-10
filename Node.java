@@ -112,7 +112,7 @@ public class Node {
 
         DownloadTaskManager newDownloadTaskManager = new DownloadTaskManager(result.getHash(), result.getFileSize(), pathToFolder, result.getFileName(), canDownload, gui);
         downloadTaskManagerMap.put(result.getHash(), newDownloadTaskManager);
-        newDownloadTaskManager.start(); // (1) 2, 3
+        newDownloadTaskManager.start();
 
     }
 
