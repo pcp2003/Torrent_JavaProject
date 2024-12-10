@@ -11,6 +11,7 @@ import java.util.Objects;
 public class FileUtils {
     public static final int BLOCK_SIZE = 10240;
 
+    //Recebe o hashValue do ficheiro e o tamanho do mesmo, e cria um lista de FileBlockRequestMessage
     public static List<FileBlockRequestMessage> createFileBlockRequestList(int hashValue, long fileLength) {
         List<FileBlockRequestMessage> result = new ArrayList<>();
         int nFullBlocks = (int) (fileLength / BLOCK_SIZE);
@@ -24,11 +25,12 @@ public class FileUtils {
         return result;
     }
 
-    private static String musicPathByHash (String pathToFolder, int musicHash){
+    //Recebe um hash de um ficheiro e itera todos os ficheiros da pasta para devolver o ficheiro que tem o mesmo hash
+    private static String filePathByHash (String pathToFolder, int fileHash){
 
         for (File file : Objects.requireNonNull(new File(pathToFolder).listFiles())) {
             if (file.isFile() && file.getName().endsWith("mp3")) {
-                if (musicHash == FileUtils.hashValue(file)){
+                if (fileHash == FileUtils.hashValue(file)){
                     return (pathToFolder + File.separator + file.getName());
                 }
             }
@@ -37,9 +39,10 @@ public class FileUtils {
         return null;
     }
 
+    //Recebe um FileBlockRequestMessage e devolve um FileBlockAnswerMessage que correponde ao pedido
     public static FileBlockAnswerMessage readFileBlock(String pathToFolder, FileBlockRequestMessage fileBlockRequestMessage) {
 
-        File file = new File(Objects.requireNonNull(musicPathByHash(pathToFolder, fileBlockRequestMessage.getHash())));
+        File file = new File(Objects.requireNonNull(filePathByHash(pathToFolder, fileBlockRequestMessage.getHash())));
 
         long offset = fileBlockRequestMessage.getOffset();
         int length = fileBlockRequestMessage.getLength();
@@ -68,6 +71,7 @@ public class FileUtils {
         return new FileBlockAnswerMessage(fileHash, offset, length, data);
     }
 
+    //Cria um ficheiro a partir de uma lista de FileBlockAnswerMessage
     public static void createFile(List<FileBlockAnswerMessage> messages, String outputPath, String fileName) {
         if (messages == null || messages.isEmpty()) {
             throw new IllegalArgumentException("Lista de mensagens inválida.");
@@ -87,6 +91,7 @@ public class FileUtils {
         System.out.println("Ficheiro escrito em: " + outputFile.getAbsolutePath());
     }
 
+    //Lê o ficheiro e devolve o hashValue do mesmo, usando a classe MessageDigest
     public static int hashValue(File file) {
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-256");
@@ -99,6 +104,7 @@ public class FileUtils {
 
     }
 
+    //Devolve a lista de ficheiros de uma pasta
     public static List<File> getFilesList( String pathToFolder) {
         List<File> files = new ArrayList<>();
         for (File file : Objects.requireNonNull(new File(pathToFolder).listFiles())) {
@@ -109,6 +115,7 @@ public class FileUtils {
         return files;
     }
 
+    //Procura os ficheiros de uma pasta que contenham uma certa string e cria uma lista de FileSearchResult com a informação dos mesmos
     public static List<FileSearchResult> getFilesByWord(InetAddress address, int port, String pathToFolder, WordSearchMessage wordSearchMessage) {
         String word = wordSearchMessage.getWord();
         List<File> files = FileUtils.getFilesList(pathToFolder);

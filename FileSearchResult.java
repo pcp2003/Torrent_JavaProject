@@ -63,6 +63,8 @@ public class FileSearchResult implements Serializable {
                 '}';
     }
 
+    //Recebe uma lista de FileSearchResult e cria um HashMap, onde a chave é o hash do ficheiro e o value é uma lista de todos os FileSearchResult desse ficheiro
+    //Este HashMap ajuda a agrupar todos os FileSearchResult recebidos de um determinado ficheiro, facilitando a contagem de Nodes que contêm o ficheiro.
     public static Map<Integer, List<FileSearchResult>> hashMap(List<FileSearchResult> fileSearchResults) {
         Map<Integer, List<FileSearchResult>> result = new HashMap<>();
         for(FileSearchResult fileSearchResult : fileSearchResults) {
