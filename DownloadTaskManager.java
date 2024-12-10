@@ -3,6 +3,7 @@ import java.util.*;
 
 public class DownloadTaskManager extends Thread {
 
+    //Thread que trata de enviar pedidos
     public class DownloadTaskManagerRequesterThread extends Thread {
         @Override
         public void run() {
@@ -76,7 +77,6 @@ public class DownloadTaskManager extends Thread {
 
     // Aguarda por uma resposta correspondente
     private synchronized NodeAgent getAvailableNodeAgent() throws InterruptedException {
-
         while(availableNodeAgentList.isEmpty()) wait();
         NodeAgent nodeAgent = availableNodeAgentList.removeFirst();
         notifyAll();

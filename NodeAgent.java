@@ -19,9 +19,7 @@ public class NodeAgent extends Thread {
 
     @Override
     public void run() {
-
         serve();
-
     }
 
     public synchronized <T> void sendObject(T object) {
@@ -38,8 +36,6 @@ public class NodeAgent extends Thread {
         try {
             System.out.println("Enviando pedido de musicas com " + message + " para o servidor: " + socket);
             out.writeObject(message);
-
-
         } catch (IOException e) {
             System.err.println("Erro no pedido de musicas com " + message + ": " + e.getMessage());
         }
@@ -48,24 +44,19 @@ public class NodeAgent extends Thread {
 
     // Realiza as conexões dos canais dos sockets
     void doConnections() {
-
         try {
             out = new ObjectOutputStream(socket.getOutputStream());
             in = new ObjectInputStream(socket.getInputStream());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
-
     }
 
     // Funções realizadas pelo servidor
     private void serve() {
         System.out.println("Agente iniciado e ouvindo no socket: " + socket);
-        try {
-
-            while (true) {
-
+        while (true) {
+            try {
                 Object obj = in.readObject();
                 switch (obj) {
                     case WordSearchMessage wordSearchMessage -> {
@@ -80,9 +71,10 @@ public class NodeAgent extends Thread {
                         node.receiveFileRequest(fileBlockRequest, this);
 
                     }
-                    case FileBlockAnswerMessage FileBlockAnswerMessage -> node.receiveAnswer(FileBlockAnswerMessage, this);
+                    case FileBlockAnswerMessage FileBlockAnswerMessage ->
+                            node.receiveAnswer(FileBlockAnswerMessage, this);
 
-                    case List<?> fileSearchResults -> {
+                        case List<?> fileSearchResults -> {
 
                         if (fileSearchResults.stream().allMatch(x -> x instanceof FileSearchResult)) {
                             @SuppressWarnings("unchecked") // Supressão localizada
@@ -94,9 +86,10 @@ public class NodeAgent extends Thread {
                     }
                     default -> System.out.println("Tipo desconhecido: " + obj);
                 }
+            } catch (ClassNotFoundException | IOException e) {
+                System.err.println("Conexão encerrada ou erro: " + e.getMessage());
+                break;
             }
-        } catch (ClassNotFoundException | IOException e) {
-            System.err.println("Conexão encerrada ou erro: " + e.getMessage());
         }
     }
 
