@@ -22,6 +22,7 @@ public class NodeAgent extends Thread {
         serve();
     }
 
+    // Função para enviar objetos pelo OutputStream() do socket
     public synchronized <T> void sendObject(T object) {
         try {
             out.writeObject(object);
@@ -31,7 +32,6 @@ public class NodeAgent extends Thread {
     }
 
     // Faz o pedido da lista dos ficheiros para os nós ligados
-    // Para garantir o funcionamento na função searchMusic temos que garantir que esta função só acabe quando a lista receivedList for alterada.
     public void searchMusicByWord(WordSearchMessage message) {
         try {
             System.out.println("Enviando pedido de musicas com " + message + " para o servidor: " + socket);
@@ -61,7 +61,7 @@ public class NodeAgent extends Thread {
                 switch (obj) {
                     case WordSearchMessage wordSearchMessage -> {
                         System.out.println("Solicitação de lista de musicas com " + wordSearchMessage);
-                        sendObject(FileUtils.getMusicsByWord(node.getAddress(), node.getPort(), node.getPathToFolder(), wordSearchMessage));
+                        sendObject(FileUtils.getFilesByWord(node.getAddress(), node.getPort(), node.getPathToFolder(), wordSearchMessage));
                     }
                     case NewConnectionRequest request -> clientPort = request.getPort();
 
@@ -102,8 +102,4 @@ public class NodeAgent extends Thread {
         return "NodeAgent{" + "myPort=" + node.getPort() + ", clientPort=" + clientPort + '}';
     }
 
-
-    public Node getNode() {
-        return node;
-    }
 }

@@ -1,6 +1,7 @@
 public class NodeAgentTask<T> {
-    private T task;
-    private NodeAgent nodeAgent;
+
+    private final T task;
+    private final NodeAgent nodeAgent;
 
     NodeAgentTask(T task, NodeAgent nodeAgent) {
         this.task = task;

@@ -83,7 +83,8 @@ public class Node {
         }).start();
     }
 
-    // Função para buscar as music que possuam no nome a palavra introduzida no "Procurar"
+    // Função para buscar as musics que possuam no nome a palavra introduzida no "Procurar"
+
     public void searchMusic(String wordToSearch) {
 
         musicSearchResult.clear();
@@ -92,12 +93,14 @@ public class Node {
         }
     }
 
+    // Função para receber a lista de fileSearchResult enviada pelo NodeAgent de outro nó
     public synchronized void receiveMusicSearchResult(List<FileSearchResult> fileSearchResult) {
         musicSearchResult.addAll(fileSearchResult);
         gui.updateMusicResultList(musicSearchResult);
         notifyAll();
     }
 
+    // Função para inciar o downloadTaskManager correspondente a este download.
     public void download(List<FileSearchResult> fileSearchResults) {
 
         FileSearchResult result = fileSearchResults.getFirst();
@@ -116,7 +119,7 @@ public class Node {
 
     }
 
-
+    // Função para receber FileRequests de outros nós a partir 
     public synchronized void receiveFileRequest(FileBlockRequestMessage fileBlockRequestMessage, NodeAgent nodeAgent) {
         System.out.println("Received request " + fileBlockRequestMessage + " in node " + port);
         fileBlockRequestMessages.add(new NodeAgentTask<>(fileBlockRequestMessage, nodeAgent));

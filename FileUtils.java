@@ -109,7 +109,7 @@ public class FileUtils {
         return files;
     }
 
-    public static List<FileSearchResult> getMusicsByWord(InetAddress address, int port, String pathToFolder, WordSearchMessage wordSearchMessage) {
+    public static List<FileSearchResult> getFilesByWord(InetAddress address, int port, String pathToFolder, WordSearchMessage wordSearchMessage) {
         String word = wordSearchMessage.getWord();
         List<File> files = FileUtils.getFilesList(pathToFolder);
         List<FileSearchResult> results = new ArrayList<>();

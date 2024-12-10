@@ -1,10 +1,14 @@
 import java.io.Serializable;
 
 public class WordSearchMessage implements Serializable {
-    private String word;
+
+    private final String word;
+
     WordSearchMessage(String word) {
         this.word = word;
     }
+
+    public String getWord() {return word;}
 
     @Override
     public String toString() {
@@ -12,6 +16,4 @@ public class WordSearchMessage implements Serializable {
                 "word='" + word + '\'' +
                 '}';
     }
-
-    public String getWord() {return word;}
 }
